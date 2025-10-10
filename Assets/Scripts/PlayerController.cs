@@ -45,6 +45,7 @@ public class PlayerController : MonoBehaviour {
 
     void FixedUpdate(){
         Move();
+        LookMoveDirection();
 
         // ジャンプ開始
         if (jumpPressed && isGrounded){
@@ -68,7 +69,14 @@ public class PlayerController : MonoBehaviour {
             rb.linearVelocity = new Vector2(Mathf.Sign(rb.linearVelocity.x) * moveSpeed, rb.linearVelocity.y);
         }
     }
-
+    private void LookMoveDirection(){
+        if(moveInput.x > 0.0f){
+            transform.eulerAngles = Vector3.zero;
+        }else if(moveInput.x < 0.0f){
+            transform.eulerAngles = new Vector3(0.0f, 180.0f, 0.0f);
+        }
+    
+    }
 
     private void CheckGround(){
         // 地面判定をPhysics2D.OverlapCircleで行う
@@ -81,7 +89,6 @@ public class PlayerController : MonoBehaviour {
             HitEnemy(other.gameObject);
             gameObject.layer = LayerMask.NameToLayer("PlayerDamage");
             Debug.Log($"Check001 - Damage!!");
-            StartCoroutine(Damage());
         }
     }
     private void HitEnemy(GameObject enemy){
@@ -92,6 +99,7 @@ public class PlayerController : MonoBehaviour {
             rb.AddForce(Vector2.up * jumpForce * 0.5f, ForceMode2D.Impulse);
         }else{
             enemy.GetComponent<EnemyManager>().PlayerDamage(this);
+            StartCoroutine(Damage());
         }
     }
     //無敵時間
@@ -100,13 +108,14 @@ public class PlayerController : MonoBehaviour {
         Color color = sr.color;
         for(int i = 0; i < damageTime; i++){
             yield return new WaitForSeconds(flashTime);
-            sr.color = new Color(color.r, color.g, color.b, color.a);
+            sr.color = new Color(color.r, color.g, color.b, 0.0f);
 
             yield return new WaitForSeconds(flashTime);
-            sr.color = Color.white;
+            sr.color = new Color(color.r, color.g, color.b, 1.0f);
         }
         sr.color = color;
         gameObject.layer = LayerMask.NameToLayer("Default");
+        Debug.Log($"Check003 - 無敵時間終了 現在のgameObject.layer -> {gameObject.layer}");
     }
 
 
@@ -126,5 +135,8 @@ public class PlayerController : MonoBehaviour {
     }
     public void Damage(int damage){
         hp = Mathf.Max(hp - damage, 0);
+    }
+    public int GetHP(){
+        return hp;
     }
 }
