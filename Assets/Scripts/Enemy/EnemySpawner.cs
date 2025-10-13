@@ -1,7 +1,7 @@
 using UnityEngine;
 
 public class EnemySpawner : MonoBehaviour{
-    [SerializeField, Header("“GƒIƒuƒWƒFƒNƒg")]
+    [SerializeField, Header("ï¿½Gï¿½Iï¿½uï¿½Wï¿½Fï¿½Nï¿½g")]
     private GameObject enemy;
 
     [SerializeField] private PlayerController player;
@@ -14,10 +14,11 @@ public class EnemySpawner : MonoBehaviour{
     }
 
     void Update(){
+        SpawnEnemy();
     }
 
     private void SpawnEnemy(){
-        if (player != null) return;
+        if (player == null) return;
     
         Vector3 playerPos = player.transform.position;
         Vector3 cameraMaxPos = Camera.main.ScreenToViewportPoint(new Vector3(Screen.width, Screen.height));

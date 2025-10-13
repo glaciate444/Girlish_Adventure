@@ -27,6 +27,7 @@ public class PlayerController : MonoBehaviour {
     public LayerMask groundLayer;
 
     private bool isGrounded;
+    private bool isAttack;
 
     void Start(){
         rb = GetComponent<Rigidbody2D>();
@@ -41,12 +42,13 @@ public class PlayerController : MonoBehaviour {
         // アニメーション更新
         anim.SetBool("Walk", moveInput.x != 0.0f);
         anim.SetBool("Jump", !isGrounded);
+
     }
 
     void FixedUpdate(){
         Move();
         LookMoveDirection();
-
+        Dead();
         // ジャンプ開始
         if (jumpPressed && isGrounded){
             rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
@@ -61,6 +63,7 @@ public class PlayerController : MonoBehaviour {
     }
 
     private void Move(){
+        if (isAttack) return;
         // 横移動
         rb.AddForce(Vector2.right * moveInput.x * moveSpeed * 10f, ForceMode2D.Force);
         
@@ -98,7 +101,7 @@ public class PlayerController : MonoBehaviour {
             Destroy(enemy);
             rb.AddForce(Vector2.up * jumpForce * 0.5f, ForceMode2D.Impulse);
         }else{
-            enemy.GetComponent<EnemyManager>().PlayerDamage(this);
+            enemy.GetComponent<BaseEnemy>().Attack(this);
             StartCoroutine(Damage());
         }
     }
@@ -117,6 +120,12 @@ public class PlayerController : MonoBehaviour {
         gameObject.layer = LayerMask.NameToLayer("Default");
         Debug.Log($"Check003 - 無敵時間終了 現在のgameObject.layer -> {gameObject.layer}");
     }
+    //HPが0になった時の処理
+    private void Dead(){
+        if(hp <= 0){
+            this.gameObject.SetActive(false); //Destroyでも良かったのですが安全性としてオブジェクトを残す
+        }
+    }
 
 
     // Invoke Unity Events 用
@@ -133,10 +142,23 @@ public class PlayerController : MonoBehaviour {
             jumpHeld = false;
         }
     }
+    public void OnAttack(InputAction.CallbackContext context){
+        if (context.started){
+            isAttack = true;
+            anim.SetTrigger("Attack"); // トリガー式
+        }
+    }
+
+
     public void Damage(int damage){
         hp = Mathf.Max(hp - damage, 0);
     }
     public int GetHP(){
         return hp;
     }
+    //攻撃の終了
+    public void EndAttack(){
+        isAttack = false;
+    }
+
 }
