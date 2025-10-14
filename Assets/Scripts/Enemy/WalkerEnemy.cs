@@ -15,15 +15,11 @@ public class WalkerEnemy : BaseEnemy {
         // 方法1: 調整されたRaycast
         Vector2 origin = transform.position;
         CapsuleCollider2D capsule = GetComponent<CapsuleCollider2D>();
-        if (capsule != null)
-        {
+        if (capsule != null){
             // 移動方向に応じて、敵の端の位置を計算
-            if (moveDirection.x < 0) // 左に移動中
-            {
+            if (moveDirection.x < 0){ // 左に移動中
                 origin.x -= capsule.size.x / 2.0f;
-            }
-            else // 右に移動中
-            {
+            }else{ // 右に移動中
                 origin.x += capsule.size.x / 2.0f;
             }
         }
@@ -31,14 +27,12 @@ public class WalkerEnemy : BaseEnemy {
         RaycastHit2D hit = Physics2D.Raycast(origin, dir, wallCheckDistance, groundLayer);
         Debug.DrawRay(origin, dir * wallCheckDistance, Color.red, 0.1f);
         
-        if (hit.collider != null && hit.distance <= wallCheckDistance)
-        {
+        if (hit.collider != null && hit.distance <= wallCheckDistance){
             hitWall = true;
         }
         
         // 方法2: CapsuleCast（より確実な検出）
-        if (!hitWall && capsule != null)
-        {
+        if (!hitWall && capsule != null){
             Vector2 size = capsule.size;
             float angle = 0f;
             float distance = wallCheckDistance;
@@ -47,14 +41,12 @@ public class WalkerEnemy : BaseEnemy {
                 transform.position, size, capsule.direction, angle, dir, distance, groundLayer
             );
             
-            if (capsuleHit.collider != null)
-            {
+            if (capsuleHit.collider != null){
                 hitWall = true;
             }
         }
         
-        if (hitWall)
-        {
+        if (hitWall){
             Debug.Log($"壁を検出: 方向転換実行");
             moveDirection = -moveDirection;
             Flip();
