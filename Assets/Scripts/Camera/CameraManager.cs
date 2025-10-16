@@ -24,7 +24,7 @@ public class CameraManager : MonoBehaviour{
     }
     // HPが減ると振動させる(将来的にDoTweenで調整)
     private void ShakeCheck(){
-        if(currentPlayerHP != player.GetHP()){
+        if(currentPlayerHP > player.GetHP()){
             currentPlayerHP = player.GetHP();
             shakeCount = 0.0f;
             StartCoroutine(Shake());

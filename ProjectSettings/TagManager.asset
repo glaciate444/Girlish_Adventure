@@ -7,6 +7,7 @@ TagManager:
   - Ground
   - Enemy
   - PlayerAttack
+  - BreakObject
   layers:
   - Default
   - TransparentFX
@@ -19,7 +20,7 @@ TagManager:
   - GroundLayer
   - PlayerDamage
   - Enemy
-  - 
+  - BlockBreak
   - 
   - 
   - 

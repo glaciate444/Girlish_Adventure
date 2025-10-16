@@ -94,7 +94,7 @@ public class EnemyManager : MonoBehaviour{
 
 
     public void PlayerDamage(PlayerController player){
-        player.Damage(attackPower);
+        player.TakeDamage(attackPower);
     }
     
     // Colliderの衝突検出（OnTrigger系の代替）

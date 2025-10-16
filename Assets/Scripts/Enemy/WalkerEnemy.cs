@@ -58,6 +58,6 @@ public class WalkerEnemy : BaseEnemy {
     }
 
     public override void Attack(PlayerController player){
-        player.Damage(attackPower);
+        player.TakeDamage(attackPower);
     }
 }

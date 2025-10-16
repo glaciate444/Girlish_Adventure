@@ -1,23 +1,20 @@
-﻿using UnityEngine;
+﻿using TMPro;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class HPBar : MonoBehaviour{
-    [Header("UI設定")]
     [SerializeField] private Slider slider;
-    [SerializeField] private PlayerController player;
-    private int maxHP;
+    [SerializeField] private TMP_Text valueHPText;
+    [SerializeField] private TMP_Text maxHPText;
 
-    void Start(){
-        if (player == null)
-            player = FindAnyObjectByType<PlayerController>();
 
-        // スライダーの初期設定
-        slider.maxValue = player.hp;
-        slider.value = player.hp;
-    }
+    public void SetHP(int hp, int maxHP){
+        if (slider != null){
+            slider.maxValue = maxHP;
+            slider.value = hp;
+        }
 
-    // Update is called once per frame
-    void Update(){
-        slider.value = player.hp;
+        if (valueHPText != null) valueHPText.text = hp.ToString();
+        if (maxHPText != null) maxHPText.text = maxHP.ToString();
     }
 }

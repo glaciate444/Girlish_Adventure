@@ -9,6 +9,7 @@ public class PlayerController : MonoBehaviour {
     public float jumpForce = 12f;
     [Header("プレイヤーのHP")]
     public int hp = 10;
+    public int maxHP = 10;
     [Header("無敵時間・点滅")]
     public float damageTime = 3f;
     public float flashTime = 0.34f;
@@ -182,11 +183,17 @@ public class PlayerController : MonoBehaviour {
         isAttacking = false;
         isAirAttacking = false;
     }
-
-
-    public void Damage(int damage){
-        hp = Mathf.Max(hp - damage, 0);
+    //ダメージ処理
+    public void TakeDamage(int damage){
+        hp = Mathf.Clamp(hp - damage, 0, maxHP);
+        UIManager.Instance?.UpdateHP(hp, maxHP);
     }
+    //回復処理
+    public void Heal(int healAmount){
+        hp = Mathf.Clamp(hp + healAmount, 0, maxHP);
+        UIManager.Instance?.UpdateHP(hp, maxHP);
+    }
+
     public int GetHP(){
         return hp;
     }
