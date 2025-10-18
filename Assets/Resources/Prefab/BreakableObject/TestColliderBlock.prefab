@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 7895774310026539937}
   - component: {fileID: 4362091682635204583}
   - component: {fileID: 6028890504375750231}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: TestColliderBlock
   m_TagString: BreakObject
   m_Icon: {fileID: 0}

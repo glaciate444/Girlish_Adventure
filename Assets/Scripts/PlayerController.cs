@@ -25,9 +25,11 @@ public class PlayerController : MonoBehaviour {
     private bool jumpCutApplied;
     private Animator anim;
     private SpriteRenderer sr;
+    // 動く床の水平速度を前フレームからの差分で補正するための記録
+    private float appliedGroundVelocityX = 0f;
 
-    [Header("Ground Check")]
-    public Transform groundCheck;
+    //[Header("Ground Check オブジェクト参照")]
+    [SerializeField] private GroundCheck groundCheck; // ← 追加
     public float groundCheckRadius = 0.2f;
     public LayerMask groundLayer;
 
@@ -40,12 +42,19 @@ public class PlayerController : MonoBehaviour {
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         sr = GetComponent<SpriteRenderer>();
+
+        // GroundCheckイベント購読
+        if (groundCheck != null){
+            groundCheck.OnGroundedChanged += OnGroundedChanged;
+        }
+    }
+    private void OnDestroy(){
+        if (groundCheck != null){
+            groundCheck.OnGroundedChanged -= OnGroundedChanged;
+        }
     }
 
     void Update(){
-        // 地面判定
-        CheckGround();
-        
         // アニメーション更新
         anim.SetBool("Walk", moveInput.x != 0.0f);
         anim.SetBool("Jump", !isGrounded);
@@ -71,6 +80,21 @@ public class PlayerController : MonoBehaviour {
         if (!jumpHeld && !jumpCutApplied && rb.linearVelocity.y > 0){
             rb.AddForce(Vector2.down * rb.linearVelocity.y * 0.5f, ForceMode2D.Impulse);
             jumpCutApplied = true; // 一度だけ適用
+        }
+        
+        // 差分補正方式: 接地中は前フレームの床速度を打ち消し、新しい床速度を適用
+        if (groundCheck != null){
+            float groundVX = isGrounded ? groundCheck.GetGroundVelocity().x : 0f;
+
+            // まず前回適用した床速度を取り除く
+            if (appliedGroundVelocityX != 0f){
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x - appliedGroundVelocityX, rb.linearVelocity.y);
+            }
+            // 今回の床速度を適用（接地中のみ非ゼロ）
+            if (groundVX != 0f){
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x + groundVX, rb.linearVelocity.y);
+            }
+            appliedGroundVelocityX = groundVX;
         }
     }
 
@@ -99,10 +123,9 @@ public class PlayerController : MonoBehaviour {
         // 🔥 Animatorに状態を同期
         anim.SetBool("FacingRight", facingRight);
     }
-    private void CheckGround(){
-        // 地面判定をPhysics2D.OverlapCircleで行う
-        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
-        anim.SetBool("IsGrounded", isGrounded);
+    private void OnGroundedChanged(bool grounded){
+        isGrounded = grounded;
+        anim.SetBool("IsGrounded", grounded);
     }
 
     private void OnCollisionEnter2D(Collision2D other){

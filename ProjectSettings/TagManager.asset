@@ -8,6 +8,7 @@ TagManager:
   - Enemy
   - PlayerAttack
   - BreakObject
+  - Platform
   layers:
   - Default
   - TransparentFX
@@ -21,7 +22,7 @@ TagManager:
   - PlayerDamage
   - Enemy
   - BlockBreak
-  - 
+  - Platform
   - 
   - 
   - 
