@@ -162,12 +162,23 @@ public class PlayerController : MonoBehaviour {
         gameObject.layer = LayerMask.NameToLayer("Default");
         Debug.Log($"Check003 - 無敵時間終了 現在のgameObject.layer -> {gameObject.layer}");
     }
-    //HPが0になった時の処理
+    //HPが0になった時の処理、Failureにする
     private void Dead(){
         if(hp <= 0){
             this.gameObject.SetActive(false); //Destroyでも良かったのですが安全性としてオブジェクトを残す
+            //Failure処理へ
         }
     }
+    //下に落下したらFailureにする
+    private void OnBecameInvisible(){
+        Camera camera = Camera.main;
+        if(camera.name == "Main Camera" && camera.transform.position.y > transform.position.y){
+            Destroy(gameObject);
+            //Failure処理へ
+        }
+    }
+
+
 
     // Invoke Unity Events 用
     public void OnMove(InputAction.CallbackContext context){

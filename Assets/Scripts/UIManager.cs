@@ -45,6 +45,12 @@ public class UIManager : MonoBehaviour {
             }
         }
     }
+    public void ShowClearUI(){
+        
+    
+    }
+
+
     // ======= 外部から呼び出すUI更新メソッド =======
 
     public void UpdateCoinUI(int total){

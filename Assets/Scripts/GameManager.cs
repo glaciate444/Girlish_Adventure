@@ -35,7 +35,7 @@ public class GameManager : MonoBehaviour {
                 break;
             case GameState.Cleared:
                 Time.timeScale = 0f;
-                // UIManager.Instance?.ShowClearUI();
+                UIManager.Instance?.ShowClearUI();
                 break;
             case GameState.GameOver:
                 Time.timeScale = 0f;
