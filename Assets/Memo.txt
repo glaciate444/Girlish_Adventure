@@ -1,0 +1,51 @@
+Scripts/
+ ├─ Enemy/
+ │   ├─ BaseEnemy.cs
+ │   ├─ MovePattern.cs       ← enum（移動タイプの種類）
+ │   ├─ IMoveBehavior.cs     ← インターフェース
+ │   ├─ Move_GroundPatrol.cs ← 実際の地上移動
+ │   ├─ Move_FlySin.cs       ← 飛行・上下揺れ
+ │   ├─ Move_Chase.cs        ← プレイヤー追尾
+ │   └─ Move_Jump.cs         ← ジャンプ移動
+
+
+🧩 5️⃣ インスペクターでの設定例
+▶ GameObject 設定例
+
+Enemy_Patrol (地上敵)
+
+Rigidbody2D
+
+BoxCollider2D
+
+BaseEnemy（継承クラス）
+
+Move Pattern → GroundPatrol
+
+Move Speed → 2
+
+HP → 5
+
+Attack Power → 1
+
+Enemy_Flying (飛行敵)
+
+Rigidbody2D（重力無効）
+
+BaseEnemy（継承クラス）
+
+Move Pattern → FlySin
+
+Move Speed → 3
+
+HP → 3
+
+Enemy_Chaser (追尾敵)
+
+Rigidbody2D
+
+BaseEnemy（継承クラス）
+
+Move Pattern → Chase
+
+Move Speed → 2.5

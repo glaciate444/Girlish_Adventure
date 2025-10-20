@@ -1,4 +1,10 @@
-﻿using System.Collections;
+﻿/* =======================================
+ * ファイル名 : PlayerController.cs
+ * 概要 : プレイヤースクリプト
+ * Date : 2025/10/21
+ * Version : 0.01
+ * ======================================= */
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -13,8 +19,11 @@ public class PlayerController : MonoBehaviour {
     [Header("無敵時間・点滅")]
     public float damageTime = 3f;
     public float flashTime = 0.34f;
+    [Header("すり抜け時間")]
+    [SerializeField] private float dropThroughTime = 0.3f; // すり抜け時間
 
     private bool facingRight = true;
+    [Header("攻撃アクション反転など")]
     [SerializeField] private SwordFlipHandler swordHandler;
     [SerializeField] private WeaponManager weaponManager;
 
@@ -28,10 +37,13 @@ public class PlayerController : MonoBehaviour {
     // 動く床の水平速度を前フレームからの差分で補正するための記録
     private float appliedGroundVelocityX = 0f;
 
-    //[Header("Ground Check オブジェクト参照")]
+    [Header("Ground Check オブジェクト参照")]
     [SerializeField] private GroundCheck groundCheck; // ← 追加
     public float groundCheckRadius = 0.2f;
     public LayerMask groundLayer;
+
+    private bool isDropping = false;
+    private PlatformEffector2D currentEffector; // 足元の床Effector参照
 
     private bool isGrounded;
     private bool isAttack;
@@ -56,7 +68,7 @@ public class PlayerController : MonoBehaviour {
 
     void Update(){
         // アニメーション更新
-        anim.SetBool("Walk", moveInput.x != 0.0f);
+        anim.SetBool("Walk", Mathf.Abs(moveInput.x) > 0.1f);
         anim.SetBool("Jump", !isGrounded);
         
         // 空中攻撃中の状態管理
@@ -66,47 +78,108 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
-    void FixedUpdate(){
-        Move();
+    private void FixedUpdate(){
+        // 動く床の速度補正を適用
+        ApplyMovingPlatformVelocity();
+        
+        if (!isAttacking){
+            MoveAlongSlope(); // ← 坂道も平地も兼ねる
+        }
         LookMoveDirection();
         Dead();
+
+        // 物理演算による意図しないジャンプを防止
+        PreventUnintendedJump();
+
         // ジャンプ開始
         if (jumpPressed && isGrounded && !isAttacking){
+            Debug.Log($"ジャンプ実行: isGrounded={isGrounded}, jumpPressed={jumpPressed}, isAttacking={isAttacking}");
             rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
             jumpPressed = false;
-            jumpCutApplied = false; // 新しいジャンプなのでリセット
+            jumpCutApplied = false;
         }
-        // 可変ジャンプ処理
+
+        // 可変ジャンプ
         if (!jumpHeld && !jumpCutApplied && rb.linearVelocity.y > 0){
             rb.AddForce(Vector2.down * rb.linearVelocity.y * 0.5f, ForceMode2D.Impulse);
-            jumpCutApplied = true; // 一度だけ適用
-        }
-        
-        // 差分補正方式: 接地中は前フレームの床速度を打ち消し、新しい床速度を適用
-        if (groundCheck != null){
-            float groundVX = isGrounded ? groundCheck.GetGroundVelocity().x : 0f;
-
-            // まず前回適用した床速度を取り除く
-            if (appliedGroundVelocityX != 0f){
-                rb.linearVelocity = new Vector2(rb.linearVelocity.x - appliedGroundVelocityX, rb.linearVelocity.y);
-            }
-            // 今回の床速度を適用（接地中のみ非ゼロ）
-            if (groundVX != 0f){
-                rb.linearVelocity = new Vector2(rb.linearVelocity.x + groundVX, rb.linearVelocity.y);
-            }
-            appliedGroundVelocityX = groundVX;
+            jumpCutApplied = true;
         }
     }
 
-    private void Move(){
-        if (isAttack || isAttacking) return;
-        // 横移動
-        rb.AddForce(Vector2.right * moveInput.x * moveSpeed * 10f, ForceMode2D.Force);
+    // 物理演算による意図しないジャンプを防止
+    private void PreventUnintendedJump(){
+        if (!isGrounded) return;
         
-        // 速度制限
+        // 坂の頂上付近での物理的な跳ね返りを抑制
+        if (groundCheck.IsGrounded && groundCheck.GroundNormal != Vector2.up){
+            float slopeAngle = Vector2.Angle(groundCheck.GroundNormal, Vector2.up);
+            
+            // 平坦に近い部分（15度以下）で垂直速度を抑制
+            if (slopeAngle < 15f && rb.linearVelocity.y > 0.5f){
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+            }
+            
+            // 坂道での過度な垂直速度を抑制
+            if (slopeAngle >= 15f && slopeAngle <= 45f && Mathf.Abs(rb.linearVelocity.y) > 3f){
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * 0.5f);
+            }
+        }
+    }
+    private void MoveAlongSlope(){
+        if (isAttack || isAttacking) return;
+
+        // 基本的な水平移動
+        Vector2 moveDir = new Vector2(moveInput.x, 0f);
+        
+        // 接地時のみ坂道処理を適用
+        if (groundCheck.IsGrounded && groundCheck.GroundNormal != Vector2.up){
+            float slopeAngle = Vector2.Angle(groundCheck.GroundNormal, Vector2.up);
+            
+            // 急すぎる坂（70度以上）では通常移動に切り替え
+            if (slopeAngle > 70f){
+                moveDir = new Vector2(moveInput.x, 0f);
+                rb.AddForce(moveDir * moveSpeed * 10f, ForceMode2D.Force);
+            }
+            else {
+                // 坂の接線を2方向取得
+                Vector2 slopeDir1 = Vector2.Perpendicular(groundCheck.GroundNormal).normalized;
+                Vector2 slopeDir2 = -slopeDir1;
+
+                // 入力方向に近い方を選択
+                Vector2 slopeDir = (Mathf.Sign(moveInput.x) == Mathf.Sign(slopeDir1.x)) ? slopeDir1 : slopeDir2;
+
+                // 入力に応じた方向（加速補正なし、一定速度）
+                moveDir = slopeDir * Mathf.Abs(moveInput.x);
+
+                // 坂道でも一定速度で移動（加速補正を削除）
+                rb.AddForce(moveDir * moveSpeed * 10f, ForceMode2D.Force);
+                
+                // 坂の頂上付近での物理演算によるジャンプを完全に抑制
+                if (slopeAngle < 15f && Mathf.Abs(rb.linearVelocity.y) > 1f){
+                    rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+                }
+            }
+        }else{
+            moveDir = new Vector2(moveInput.x, 0f);
+            rb.AddForce(moveDir * moveSpeed * 10f, ForceMode2D.Force);
+        }
+
+        // 速度制限（坂道でも一定速度を維持）
         if (Mathf.Abs(rb.linearVelocity.x) > moveSpeed){
             rb.linearVelocity = new Vector2(Mathf.Sign(rb.linearVelocity.x) * moveSpeed, rb.linearVelocity.y);
         }
+    }
+    private void SlideDownSlope(){
+        // 坂でなければ無効
+        float slopeAngle = Vector2.Angle(groundCheck.GroundNormal, Vector2.up);
+        if (slopeAngle < 5f) return; // 平地は除外
+
+        // 坂方向（重力に沿って）滑る
+        Vector2 slopeDir = Vector2.Perpendicular(groundCheck.GroundNormal);
+        if (slopeDir.y > 0)
+            slopeDir *= -1f;
+
+        rb.AddForce(slopeDir.normalized * moveSpeed * 8f, ForceMode2D.Force);
     }
     private void LookMoveDirection(){
         if(moveInput.x > 0.0f){
@@ -124,6 +197,7 @@ public class PlayerController : MonoBehaviour {
         anim.SetBool("FacingRight", facingRight);
     }
     private void OnGroundedChanged(bool grounded){
+        Debug.Log($"接地状態変化: {grounded}");
         isGrounded = grounded;
         anim.SetBool("IsGrounded", grounded);
     }
@@ -172,6 +246,7 @@ public class PlayerController : MonoBehaviour {
     //下に落下したらFailureにする
     private void OnBecameInvisible(){
         Camera camera = Camera.main;
+        Debug.Log($"camera.name => {camera.name}");
         if(camera.name == "Main Camera" && camera.transform.position.y > transform.position.y){
             Destroy(gameObject);
             //Failure処理へ
@@ -183,6 +258,14 @@ public class PlayerController : MonoBehaviour {
     // Invoke Unity Events 用
     public void OnMove(InputAction.CallbackContext context){
         moveInput = context.ReadValue<Vector2>();
+
+        // ↓キー押下中の処理チェック
+        if (moveInput.y < -0.5f && !isDropping && groundCheck.IsGrounded){
+            StartCoroutine(DropThroughPlatform());
+        }
+        if (moveInput.y < -0.5f && groundCheck.IsGrounded){
+            SlideDownSlope();
+        }
     }
 
     public void OnJump(InputAction.CallbackContext context){
@@ -235,6 +318,57 @@ public class PlayerController : MonoBehaviour {
     public void EndAttack(){
         isAttack = false;
         anim.ResetTrigger("Attack");
+    }
+    // 動く床の速度補正を適用
+    private void ApplyMovingPlatformVelocity(){
+        if (!isGrounded) return;
+        
+        // 足元の動く床の速度を取得
+        Vector2 groundVelocity = groundCheck.GetGroundVelocity();
+        
+        // 前フレームで適用した速度を相殺
+        rb.linearVelocity -= new Vector2(appliedGroundVelocityX, 0f);
+        
+        // 新しい床の速度を適用
+        rb.linearVelocity += groundVelocity;
+        
+        // 次フレーム用に記録
+        appliedGroundVelocityX = groundVelocity.x;
+    }
+
+    private IEnumerator DropThroughPlatform(){
+        // すり抜け中フラグ
+        isDropping = true;
+
+        // GroundCheckの下にあるPlatformEffectorを検出
+        Collider2D hit = Physics2D.OverlapCircle(
+            groundCheck.transform.position,
+            groundCheck.checkRadius,
+            groundCheck.groundLayer
+        );
+
+        if (hit != null){
+            // PlatformEffector と PlatformType を探す（親にある可能性があるので GetComponentInParent を使用）
+            PlatformType platformType = hit.GetComponentInParent<PlatformType>();
+            PlatformEffector2D eff = hit.GetComponentInParent<PlatformEffector2D>();
+
+            // プラットフォームが存在し、かつ drop を許可している場合だけ落下処理を行う
+            if (platformType != null && platformType.allowDropThrough && eff != null){
+                // 回転させて一時的に衝突方向を反転（落下可能にする）
+                float originalOffset = eff.rotationalOffset;
+                eff.rotationalOffset = 180f;
+
+                // 少し時間を置いて下に抜ける
+                yield return new WaitForSeconds(dropThroughTime);
+
+                // 元に戻す
+                eff.rotationalOffset = originalOffset;
+            }
+        }
+
+        // 小さな猶予を置いて二重呼び出しを防ぐ（調整可）
+        yield return new WaitForSeconds(0.05f);
+        isDropping = false;
     }
 
 }
