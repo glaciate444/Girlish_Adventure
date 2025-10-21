@@ -1,18 +1,18 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class ProjectileWeapon : WeaponBase{
-    [Header("”ò‚Ñ“¹‹ïİ’è")]
-    public GameObject projectilePrefab;     // ’e‚â–‚–@‚ÌPrefab
+    [Header("é£›ã³é“å…·è¨­å®š")]
+    public GameObject projectilePrefab;     // å¼¾ã‚„é­”æ³•ã®Prefab
     public float projectileSpeed = 10f;
-    public Transform firePoint;             // ”­ËˆÊ’u
+    public Transform firePoint;             // ç™ºå°„ä½ç½®
 
     protected override void OnAttackStart(){
         if (projectilePrefab == null || firePoint == null){
-            Debug.LogWarning($"{name}: projectilePrefab ‚Ü‚½‚Í firePoint ‚ª–¢İ’è‚Å‚·B");
+            Debug.LogWarning($"{name}: projectilePrefab ã¾ãŸã¯ firePoint ãŒæœªè¨­å®šã§ã™ã€‚");
             return;
         }
 
-        // ’eŠÛ¶¬
+        // å¼¾ä¸¸ç”Ÿæˆ
         GameObject projObj = Instantiate(projectilePrefab, firePoint.position, Quaternion.identity);
         Projectile projectile = projObj.GetComponent<Projectile>();
 
@@ -20,7 +20,7 @@ public class ProjectileWeapon : WeaponBase{
             projectile.Setup(attackDirection, damage, projectileSpeed);
         }
 
-        // ƒp[ƒeƒBƒNƒ‹Ä¶i—á‚¦‚Î–‚–@wƒGƒtƒFƒNƒg‚È‚Çj
+        // ãƒ‘ãƒ¼ãƒ†ã‚£ã‚¯ãƒ«å†ç”Ÿï¼ˆä¾‹ãˆã°é­”æ³•é™£ã‚¨ãƒ•ã‚§ã‚¯ãƒˆãªã©ï¼‰
         PlayEffect();
     }
 }

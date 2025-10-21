@@ -114,13 +114,13 @@ public class PlayerController : MonoBehaviour {
         if (groundCheck.IsGrounded && groundCheck.GroundNormal != Vector2.up){
             float slopeAngle = Vector2.Angle(groundCheck.GroundNormal, Vector2.up);
             
-            // 平坦に近い部分（15度以下）で垂直速度を抑制
-            if (slopeAngle < 15f && rb.linearVelocity.y > 0.5f){
+            // 平坦に近い部分（25度以下）で垂直速度を抑制
+            if (slopeAngle < 25f && rb.linearVelocity.y > 0.5f){
                 rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
             }
             
             // 坂道での過度な垂直速度を抑制
-            if (slopeAngle >= 15f && slopeAngle <= 45f && Mathf.Abs(rb.linearVelocity.y) > 3f){
+            if (slopeAngle >= 25f && slopeAngle <= 65f && Mathf.Abs(rb.linearVelocity.y) > 3f){
                 rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * 0.5f);
             }
         }

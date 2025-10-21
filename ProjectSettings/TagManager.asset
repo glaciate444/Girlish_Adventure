@@ -16,14 +16,14 @@ TagManager:
   - Player
   - Water
   - UI
-  - 
+  - PlayerBullet
   - PlayerAttack
   - GroundLayer
   - PlayerDamage
   - Enemy
   - BlockBreak
   - Platform
-  - 
+  - EnemyBullet
   - 
   - 
   - 
