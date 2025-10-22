@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5b32583b1781ad4f81f68fe6bf5c3f6, type: 3}
+  m_Name: EnemyShootTest1
+  m_EditorClassIdentifier: Assembly-CSharp::Shoot_Single
+  bulletPrefab: {fileID: 2649944767155283731, guid: c732eb3ea9e1ca44f86c2937e91c57dc, type: 3}
+  bulletSpeed: 6
+  fireInterval: 1.5
+  aimAtPlayer: 1

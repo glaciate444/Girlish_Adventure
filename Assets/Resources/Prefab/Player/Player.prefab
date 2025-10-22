@@ -446,11 +446,16 @@ MonoBehaviour:
   jumpForce: 12
   hp: 10
   maxHP: 10
+  sp: 6
+  maxSP: 6
   damageTime: 6
   flashTime: 0.05
   dropThroughTime: 0.3
   swordHandler: {fileID: 8497053089012765622}
   weaponManager: {fileID: 7919670496582792910}
+  playerBulletPrefab: {fileID: 2649944767155283731, guid: f5751807d56bfb248b9a198e4b0ba40e, type: 3}
+  firePoint: {fileID: 462057023897668116}
+  specialCost: 1
   groundCheck: {fileID: 6823880510347196788}
   groundCheckRadius: 0.3
   groundLayer:
@@ -529,6 +534,22 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 3da93d44-f328-4f4f-ae07-c74711a0318c
     m_ActionName: 'Player/Attack[/Keyboard/z]'
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 8418731901948988810}
+        m_TargetAssemblyTypeName: PlayerController, Assembly-CSharp
+        m_MethodName: OnSpecialA
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 03c12ddb-960d-48c6-8acf-7f480b6a26a1
+    m_ActionName: 'Player/SpecialA[/Keyboard/c]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player

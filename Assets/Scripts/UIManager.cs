@@ -8,6 +8,7 @@ public class UIManager : MonoBehaviour {
     [SerializeField] private Canvas canvas;
     [SerializeField] private TextMeshProUGUI coinText;
     [SerializeField] private HPBar hpBar;
+    [SerializeField] private SPBar spBar;
 
     private void Awake(){
         if(Instance == null){
@@ -30,6 +31,7 @@ public class UIManager : MonoBehaviour {
         var player = FindAnyObjectByType<PlayerController>();
         if (player != null)
             UpdateHP(player.hp, player.maxHP);
+            UpdateSP(player.sp, player.maxSP);
     }
 
     private void OnEnable() => AssignCamera();
@@ -66,4 +68,11 @@ public class UIManager : MonoBehaviour {
         else
             Debug.LogWarning("HPBar が設定されていません！（Prefab内でドラッグしてください）");
     }
+    public void UpdateSP(int currentSP, int maxSP){
+        if (hpBar != null)
+            spBar.SetSP(currentSP, maxSP);
+        else
+            Debug.LogWarning("SPBar が設定されていません！（Prefab内でドラッグしてください）");
+    }
+
 }

@@ -16,6 +16,9 @@ public class PlayerController : MonoBehaviour {
     [Header("プレイヤーのHP")]
     public int hp = 10;
     public int maxHP = 10;
+    [Header("プレイヤーのSP")]
+    public int sp = 6;
+    public int maxSP = 6;
     [Header("無敵時間・点滅")]
     public float damageTime = 3f;
     public float flashTime = 0.34f;
@@ -26,6 +29,10 @@ public class PlayerController : MonoBehaviour {
     [Header("攻撃アクション反転など")]
     [SerializeField] private SwordFlipHandler swordHandler;
     [SerializeField] private WeaponManager weaponManager;
+
+    [SerializeField] private GameObject playerBulletPrefab;
+    [SerializeField] private Transform firePoint;
+    [SerializeField] private int specialCost = 1;
 
     private Rigidbody2D rb;
     private Vector2 moveInput;
@@ -252,9 +259,6 @@ public class PlayerController : MonoBehaviour {
             //Failure処理へ
         }
     }
-
-
-
     // Invoke Unity Events 用
     public void OnMove(InputAction.CallbackContext context){
         moveInput = context.ReadValue<Vector2>();
@@ -285,6 +289,20 @@ public class PlayerController : MonoBehaviour {
             weaponManager.Attack(moveInput);
         }
     }
+    public void OnSpecialA(InputAction.CallbackContext context){
+        Debug.Log($"localScale.x = {transform.localScale.x}, spriteFlipX = {GetComponent<SpriteRenderer>()?.flipX}");
+        if (!context.performed) return;
+        if (sp < specialCost) return;
+
+        UseSpecial(specialCost);
+
+        var bulletObj = Instantiate(playerBulletPrefab, firePoint.position, Quaternion.identity);
+        var bullet = bulletObj.GetComponent<PlayerBullet>();
+        if (bullet != null){
+            Vector2 dir = facingRight ? Vector2.right : Vector2.left;
+            bullet.Setup(dir);
+        }
+    }
 
     private IEnumerator AttackRoutine(){
         anim.SetTrigger("Attack");
@@ -306,14 +324,28 @@ public class PlayerController : MonoBehaviour {
         UIManager.Instance?.UpdateHP(hp, maxHP);
     }
     //回復処理
-    public void Heal(int healAmount){
+    public void HealHP(int healAmount){
         hp = Mathf.Clamp(hp + healAmount, 0, maxHP);
         UIManager.Instance?.UpdateHP(hp, maxHP);
+    }
+    //SP消費処理
+    public void UseSpecial(int useSP){
+        sp = Mathf.Clamp(sp - useSP, 0, maxSP);
+        UIManager.Instance?.UpdateSP(sp, maxSP);
+    }
+    //SP回復処理
+    public void HealSP(int healSpAmount){
+        sp = Mathf.Clamp(sp + healSpAmount, 0, maxSP);
+        UIManager.Instance?.UpdateSP(sp, maxSP);
     }
 
     public int GetHP(){
         return hp;
     }
+    public int GetSP(){
+        return sp;
+    }
+
     //攻撃の終了
     public void EndAttack(){
         isAttack = false;

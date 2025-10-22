@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 [CreateAssetMenu(menuName = "Enemy/MoveBehavior/FlySin")]
 public class Move_FlySin : MoveBehaviorSO {
@@ -6,7 +6,7 @@ public class Move_FlySin : MoveBehaviorSO {
     [SerializeField] private float frequency = 2f;
 
     public override void Initialize(BaseEnemy enemy, MoveState state){
-        // Še“G‚Åƒ‰ƒ“ƒ_ƒ€‚ÈˆÊ‘Š‚ğİ’è
+        // å„æ•µã§ãƒ©ãƒ³ãƒ€ãƒ ãªä½ç›¸ã‚’è¨­å®š
         state.timeOffset = Random.Range(0f, Mathf.PI * 2);
     }
 

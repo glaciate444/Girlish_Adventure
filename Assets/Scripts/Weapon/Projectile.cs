@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class Projectile : MonoBehaviour{
     private Vector2 direction;
@@ -25,7 +25,7 @@ public class Projectile : MonoBehaviour{
             if (enemy != null)
                 enemy.TakeDamage(damage);
 
-            Destroy(gameObject); // ˆê“x“–‚½‚Á‚½‚çÁ‚¦‚é
+            Destroy(gameObject); // ä¸€åº¦å½“ãŸã£ãŸã‚‰æ¶ˆãˆã‚‹
         }else if (other.gameObject.layer == LayerMask.NameToLayer("Ground")){
             Destroy(gameObject);
         }
