@@ -428,7 +428,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51e940012724eea4182d0fcffeb0c36a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerControllerNew
-  moveSpeed: 8
+  moveSpeed: 6
   jumpForce: 12
   hp: 10
   maxHP: 10
@@ -450,6 +450,8 @@ MonoBehaviour:
     m_Bits: 256
   airControlFactor: 0.8
   slopeAcceptAngle: 50
+  slopeTransitionSpeed: 0.1
+  angleHysteresis: 5
 --- !u!114 &894266913406812210
 MonoBehaviour:
   m_ObjectHideFlags: 0

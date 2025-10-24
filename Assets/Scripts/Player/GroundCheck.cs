@@ -26,6 +26,7 @@ public class GroundCheck : MonoBehaviour
 
     private bool prevGrounded;
     private Collider2D currentGroundCollider;
+    private Vector2 smoothedNormal = Vector2.up;
 
     private void Update()
     {
@@ -44,11 +45,23 @@ public class GroundCheck : MonoBehaviour
         {
             currentGroundCollider = hit;
             Vector2 averageNormal = GetStableGroundNormal();
-            GroundNormal = averageNormal;
+            
+            // 法線の急激な変化を防ぐ（より厳格に制限）
+            float angleDiff = Vector2.Angle(smoothedNormal, averageNormal);
+            if (angleDiff > 30f) // 30度以上の急激な変化を制限（より厳格に）
+            {
+                float lerpFactor = 30f / angleDiff;
+                averageNormal = Vector2.Lerp(smoothedNormal, averageNormal, lerpFactor).normalized;
+            }
+            
+            // さらに滑らかな法線変化
+            smoothedNormal = Vector2.Lerp(smoothedNormal, averageNormal, 0.1f).normalized;
+            GroundNormal = smoothedNormal;
         }
         else
         {
             currentGroundCollider = null;
+            smoothedNormal = Vector2.up;
             GroundNormal = Vector2.up;
         }
 
