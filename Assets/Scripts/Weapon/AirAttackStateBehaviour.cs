@@ -16,7 +16,7 @@ public class AirAttackStateBehaviour : StateMachineBehaviour
         attackTimer = attackDuration;
         isAttacking = true;
         
-        Debug.Log($"空中攻撃開始: {stateInfo.shortNameHash}");
+        Debug.Log($"空中攻撃開始: {stateInfo.shortNameHash} - アニメーション強制再生");
     }
 
     // ステート更新中
@@ -32,7 +32,7 @@ public class AirAttackStateBehaviour : StateMachineBehaviour
                 isAttacking = false;
                 // Attackトリガーをリセット
                 animator.ResetTrigger("Attack");
-                Debug.Log("空中攻撃終了");
+                Debug.Log("空中攻撃終了 - Attackトリガーをリセット");
             }
         }
     }
@@ -42,6 +42,16 @@ public class AirAttackStateBehaviour : StateMachineBehaviour
     {
         isAttacking = false;
         attackTimer = 0f;
-        Debug.Log($"空中攻撃終了: {stateInfo.shortNameHash}");
+        // ステート終了時にもAttackトリガーをリセット
+        animator.ResetTrigger("Attack");
+        
+        // 空中攻撃終了後はJumpパラメータをtrueに戻す
+        if (playerController != null && !playerController.GetComponent<GroundCheck>().IsGrounded)
+        {
+            animator.SetBool("Jump", true);
+            Debug.Log("空中攻撃終了 - Jumpパラメータをtrueに戻す");
+        }
+        
+        Debug.Log($"空中攻撃終了: {stateInfo.shortNameHash} - Attackトリガーをリセット");
     }
 }

@@ -366,7 +366,7 @@ Rigidbody2D:
   m_UseAutoMass: 0
   m_Mass: 1
   m_LinearDamping: 0
-  m_AngularDamping: 0.05
+  m_AngularDamping: 0
   m_GravityScale: 2
   m_Material: {fileID: 6200000, guid: a8a34461126416e43a32639ed91f142e, type: 2}
   m_IncludeLayers:
@@ -389,7 +389,7 @@ CapsuleCollider2D:
   m_Enabled: 1
   serializedVersion: 3
   m_Density: 1
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: a8a34461126416e43a32639ed91f142e, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -428,7 +428,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51e940012724eea4182d0fcffeb0c36a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerControllerNew
-  moveSpeed: 5
+  moveSpeed: 8
   jumpForce: 12
   hp: 10
   maxHP: 10
@@ -437,7 +437,6 @@ MonoBehaviour:
   damageTime: 6
   flashTime: 0.05
   dropThroughTime: 0.3
-  gravity: 30
   swordHandler: {fileID: 8497053089012765622}
   weaponBase: {fileID: 1509482664476697413}
   playerBulletPrefab: {fileID: 2649944767155283731, guid: f5751807d56bfb248b9a198e4b0ba40e, type: 3}
@@ -449,6 +448,8 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 256
+  airControlFactor: 0.8
+  slopeAcceptAngle: 50
 --- !u!114 &894266913406812210
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -553,7 +554,7 @@ Animator:
   m_GameObject: {fileID: 9125102980391096417}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 6e009a05643234044bfddd36c0f5625f, type: 2}
+  m_Controller: {fileID: 9100000, guid: 0a1d76f0e02086a468558e0144ec7b34, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
