@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 2764715296277405519}
   - component: {fileID: 6836057907802309014}
-  - component: {fileID: 7919670496582792910}
   - component: {fileID: 1509482664476697413}
   - component: {fileID: 8497053089012765622}
   - component: {fileID: 7124145882455605178}
@@ -95,20 +94,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 1
---- !u!114 &7919670496582792910
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1677397361693870223}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b094c0f448014b4596385f7b0a7fdc0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WeaponManager
-  currentWeapon: {fileID: 1509482664476697413}
-  facingRight: 1
 --- !u!114 &1509482664476697413
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -124,6 +109,7 @@ MonoBehaviour:
   damage: 1
   attackDuration: 0.3
   attackDirection: {x: 1, y: 0}
+  hitAnimationPrefab: {fileID: 2492247588406474625, guid: efda86670dc94e747a1371da620c0ec7, type: 3}
   attackEffectPrefab: {fileID: 0}
   effectSpawnPoint: {fileID: 2764715296277405519}
   upAngle: 22.5
@@ -143,7 +129,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SwordFlipHandler
   swordTransform: {fileID: 2764715296277405519}
-  weaponManager: {fileID: 7919670496582792910}
+  swordWeapon: {fileID: 1509482664476697413}
   rightLocalPosition: {x: 0.415, y: -0.19, z: 0}
   leftLocalPosition: {x: -0.415, y: -0.19, z: 0}
   swordSprite: {fileID: 6836057907802309014}
@@ -382,7 +368,7 @@ Rigidbody2D:
   m_LinearDamping: 0
   m_AngularDamping: 0.05
   m_GravityScale: 2
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: a8a34461126416e43a32639ed91f142e, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -451,11 +437,13 @@ MonoBehaviour:
   damageTime: 6
   flashTime: 0.05
   dropThroughTime: 0.3
+  gravity: 30
   swordHandler: {fileID: 8497053089012765622}
-  weaponManager: {fileID: 7919670496582792910}
+  weaponBase: {fileID: 1509482664476697413}
   playerBulletPrefab: {fileID: 2649944767155283731, guid: f5751807d56bfb248b9a198e4b0ba40e, type: 3}
   firePoint: {fileID: 462057023897668116}
   specialCost: 1
+  hitEffectSpawner: {fileID: 1013685082542145824, guid: efda86670dc94e747a1371da620c0ec7, type: 3}
   groundCheck: {fileID: 6823880510347196788}
   groundCheckRadius: 0.3
   groundLayer:

@@ -11,7 +11,7 @@ public class FallRespawnLift : BaseFallLift{
     }
 
     private IEnumerator RespawnRoutine(){
-        rb.isKinematic = true;
+        rb.bodyType = RigidbodyType2D.Kinematic;
         rb.gravityScale = 0f;
         rb.linearVelocity = Vector2.zero;
         rb.angularVelocity = 0f;
@@ -21,7 +21,7 @@ public class FallRespawnLift : BaseFallLift{
         transform.position = initialPosition;
         transform.rotation = initialRotation;
 
-        rb.isKinematic = true;
+        rb.bodyType = RigidbodyType2D.Dynamic;
         isFalling = false;
     }
 }

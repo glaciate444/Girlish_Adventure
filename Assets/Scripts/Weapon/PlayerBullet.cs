@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerBullet : BaseBullet {
@@ -11,7 +11,7 @@ public class PlayerBullet : BaseBullet {
     protected override void Start(){
         base.Start();
         rb = GetComponent<Rigidbody2D>();
-        rb.gravityScale = 0; // ’e‚ª—‰º‚µ‚È‚¢‚æ‚¤‚É
+        rb.gravityScale = 0; // å¼¾ãŒè½ä¸‹ã—ãªã„ã‚ˆã†ã«
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
         rb.freezeRotation = true;
     }
@@ -21,16 +21,16 @@ public class PlayerBullet : BaseBullet {
         targetTag = "Enemy";
         initialized = true;
 
-        // Rigidbody‚ª‚Ü‚¾æ“¾‚³‚ê‚Ä‚¢‚È‚¢ê‡‚à‚ ‚é‚½‚ßˆÀ‘S‚ÉŒÄ‚Ô
+        // RigidbodyãŒã¾ã å–å¾—ã•ã‚Œã¦ã„ãªã„å ´åˆã‚‚ã‚ã‚‹ãŸã‚å®‰å…¨ã«å‘¼ã¶
         if (rb == null)
             rb = GetComponent<Rigidbody2D>();
 
-        // Unity 6‚Å‚Í‚±‚±‚Å’¼Ú‘ã“ü‚µ‚Ä‚àOK
+        // Unity 6ã§ã¯ã“ã“ã§ç›´æ¥ä»£å…¥ã—ã¦ã‚‚OK
         rb.linearVelocity = direction * speed;
     }
 
     private void FixedUpdate(){
-        // ”O‚Ì‚½‚ßA”­ËŒã‚à‘¬“x‚ğˆÛ‚·‚é
+        // å¿µã®ãŸã‚ã€ç™ºå°„å¾Œã‚‚é€Ÿåº¦ã‚’ç¶­æŒã™ã‚‹
         if (initialized && rb.linearVelocity.sqrMagnitude < 0.01f){
             rb.linearVelocity = direction * speed;
         }

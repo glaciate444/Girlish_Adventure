@@ -1,11 +1,11 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 [CreateAssetMenu(menuName = "Enemy/MoveBehavior/FlySinFollow")]
 public class Move_FlySinFollow : MoveBehaviorSO {
     [SerializeField] private float amplitude = 0.5f;
     [SerializeField] private float frequency = 2f;
     [SerializeField] private bool followPlayer = true;
-    [SerializeField] private float turnSpeed = 2f; // ’Ç”ö‚Ì•ûŒü•âŠÔ‘¬“x
+    [SerializeField] private float turnSpeed = 2f; // è¿½å°¾æ™‚ã®æ–¹å‘è£œé–“é€Ÿåº¦
 
     public override void Initialize(BaseEnemy enemy, MoveState state){
         state.timeOffset = Random.Range(0f, Mathf.PI * 2f);
@@ -14,7 +14,7 @@ public class Move_FlySinFollow : MoveBehaviorSO {
     public override void Move(BaseEnemy enemy, MoveState state){
         var rb = enemy.Rb;
 
-        // ---- ’Ç”öˆ— ----
+        // ---- è¿½å°¾å‡¦ç† ----
         Vector2 moveDir = enemy.MoveDirection;
         if (followPlayer && enemy.Player != null){
             Vector2 targetDir = (enemy.Player.position - enemy.transform.position).normalized;
@@ -22,7 +22,7 @@ public class Move_FlySinFollow : MoveBehaviorSO {
             enemy.MoveDirection = moveDir;
         }
 
-        // ---- Sin”g”òs ----
+        // ---- Sinæ³¢é£›è¡Œ ----
         float y = Mathf.Sin(Time.time * frequency + state.timeOffset) * amplitude;
         rb.linearVelocity = new Vector2(moveDir.x * enemy.MoveSpeed, y);
     }

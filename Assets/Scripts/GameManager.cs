@@ -1,3 +1,9 @@
+/* =======================================
+ * ファイル名 : GameManager.cs
+ * 概要 : ゲームメインスクリプト
+ * Date : 2025/10/21
+ * Version : 0.01
+ * ======================================= */
 using UnityEngine;
 using UnityEngine.SceneManagement;
 

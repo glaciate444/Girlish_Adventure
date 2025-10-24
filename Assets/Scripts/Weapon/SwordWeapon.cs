@@ -1,51 +1,59 @@
 ﻿using UnityEngine;
+using System.Collections;
 
-public class SwordWeapon : WeaponBase{
+public class SwordWeapon : WeaponBase {
     [Header("攻撃方向ごとのローカル回転")]
-    public float upAngle = 0f;
-    public float diagonalAngle = 45f;
-    public float forwardAngle = 90f;
+    [SerializeField] private float upAngle = 0f;
+    [SerializeField] private float diagonalAngle = 45f;
+    [SerializeField] private float forwardAngle = 90f;
 
-    // WeaponManagerなどから設定してもらう用
+    [Header("向き制御")]
     public bool facingRight = true;
+    
+    // 向きを設定するメソッド
+    public void SetFacingRight(bool facing){
+        facingRight = facing;
+    }
 
     protected override void OnAttackStart(){
+        Debug.Log($"SwordWeapon.OnAttackStart呼び出し - 現在のisAttacking: {isAttacking}");
+        
         Vector2 dir = attackDirection.normalized;
 
         bool isUp = dir.y > 0.9f;
         bool isDiagUp = !isUp && (dir.y > 0.5f && Mathf.Abs(dir.x) > 0.5f);
 
         float angle = forwardAngle;
-        if (isUp){
+        if (isUp)
             angle = upAngle;
-        }else if (isDiagUp){
+        else if (isDiagUp)
             angle = diagonalAngle;
-        }
 
-        // 攻撃方向符号（右なら+、左なら-）
-        float sign = isUp ? 1f : Mathf.Sign(dir.x == 0 ? 1f : dir.x);
-
-        // 🔥 左右線対称：左向き時は角度を反転
-        if (!facingRight)
-            sign *= -1f;
-
-        transform.localRotation = Quaternion.Euler(0, 0, angle * sign);
+        // ✅ 符号は攻撃方向からのみ判定する（facingRightを重複使用しない）
+        float sign = Mathf.Sign(dir.x == 0 ? (facingRight ? 1f : -1f) : dir.x);
         
-        // 剣の表示を確実にする
+        // デバッグログを追加
+        Debug.Log($"SwordWeapon - dir: {dir}, facingRight: {facingRight}, sign: {sign}, angle: {angle}");
+
+        // 左右方向で角度反転
+        transform.localRotation = Quaternion.Euler(0f, 0f, angle * sign);
+
+        // 剣を表示
         gameObject.SetActive(true);
+        
+        // 攻撃判定の有効化をログ出力
+        Debug.Log($"SwordWeapon攻撃開始 - 剣を表示、コライダー有効化、isAttacking: {isAttacking}");
     }
+
     protected override void OnAttackEnd(){
         transform.localRotation = Quaternion.identity;
-        // 空中攻撃の場合は剣を少し長く表示する
-        if (gameObject.activeInHierarchy) {
+        if (gameObject.activeInHierarchy)
             StartCoroutine(DelayedHide());
-        }
     }
-    
-    private System.Collections.IEnumerator DelayedHide(){
-        yield return new WaitForSeconds(0.2f); // 0.2秒後に非表示
-        if (gameObject.activeInHierarchy) {
+
+    private IEnumerator DelayedHide(){
+        yield return new WaitForSeconds(0.2f);
+        if (gameObject.activeInHierarchy)
             gameObject.SetActive(false);
-        }
     }
 }

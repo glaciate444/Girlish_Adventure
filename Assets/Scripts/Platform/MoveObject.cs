@@ -1,8 +1,8 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class MoveObject : MonoBehaviour{
-    [Header("�ړ��o�H")] public GameObject[] movePoint;
-    [Header("����")] public float speed = 1.0f;
+    [Header("移動経路")] public GameObject[] movePoint;
+    [Header("速さ")] public float speed = 1.0f;
 
     private Rigidbody2D rb;
     private int nowPoint = 0;
@@ -22,46 +22,46 @@ public class MoveObject : MonoBehaviour{
 
     private void FixedUpdate(){
         if (movePoint != null && movePoint.Length > 1 && rb != null){
-            //�ʏ�i�s
+            //通常進行
             if (!returnPoint){
                 int nextPoint = nowPoint + 1;
 
-                //�ڕW�|�C���g�Ƃ̌덷���킸���ɂȂ�܂ňړ�
+                //目標ポイントとの誤差がわずかになるまで移動
                 if (Vector2.Distance(transform.position, movePoint[nextPoint].transform.position) > 0.1f){
-                    //���ݒn���玟�̃|�C���g�ւ̃x�N�g�����쐬
+                    //現在地から次のポイントへのベクトルを作成
                     Vector2 toVector = Vector2.MoveTowards(transform.position, movePoint[nextPoint].transform.position, speed * Time.deltaTime);
 
-                    //���̃|�C���g�ֈړ�
+                    //次のポイントへ移動
                     rb.MovePosition(toVector);
                 }
-                //���̃|�C���g���P�i�߂�
+                //次のポイントを１つ進める
                 else{
                     rb.MovePosition(movePoint[nextPoint].transform.position);
                     ++nowPoint;
-                    //���ݒn���z��̍Ōゾ�����ꍇ
+                    //現在地が配列の最後だった場合
                     if (nowPoint + 1 >= movePoint.Length)
                     {
                         returnPoint = true;
                     }
                 }
             }
-            //�ܕԂ��i�s
+            //折返し進行
             else{
                 int nextPoint = nowPoint - 1;
 
-                //�ڕW�|�C���g�Ƃ̌덷���킸���ɂȂ�܂ňړ�
+                //目標ポイントとの誤差がわずかになるまで移動
                 if (Vector2.Distance(transform.position, movePoint[nextPoint].transform.position) > 0.1f){
-                    //���ݒn���玟�̃|�C���g�ւ̃x�N�g�����쐬
+                    //現在地から次のポイントへのベクトルを作成
                     Vector2 toVector = Vector2.MoveTowards(transform.position, movePoint[nextPoint].transform.position, speed * Time.deltaTime);
 
-                    //���̃|�C���g�ֈړ�
+                    //次のポイントへ移動
                     rb.MovePosition(toVector);
                 }
-                //���̃|�C���g���P�߂�
+                //次のポイントを１つ戻す
                 else{
                     rb.MovePosition(movePoint[nextPoint].transform.position);
                     --nowPoint;
-                    //���ݒn���z��̍ŏ��������ꍇ
+                    //現在地が配列の最初だった場合
                     if (nowPoint <= 0){
                         returnPoint = false;
                     }

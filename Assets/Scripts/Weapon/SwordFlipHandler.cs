@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class SwordFlipHandler : MonoBehaviour{
     [SerializeField] private Transform swordTransform;
-    [SerializeField] private WeaponManager weaponManager;
+    [SerializeField] private SwordWeapon swordWeapon;
     [SerializeField] private Vector3 rightLocalPosition = new Vector3(0.5f, 0f, 0f);
     [SerializeField] private Vector3 leftLocalPosition = new Vector3(-0.5f, 0f, 0f);
     [SerializeField] private SpriteRenderer swordSprite; // ★ 追加
@@ -10,10 +10,7 @@ public class SwordFlipHandler : MonoBehaviour{
     public void UpdateSwordDirection(bool facingRight){
         // 参照未設定なら WeaponManager から補完
         if (swordTransform == null){
-            if (weaponManager == null) weaponManager = GetComponentInParent<WeaponManager>();
-            if (weaponManager != null && weaponManager.currentWeapon != null){
-                swordTransform = weaponManager.currentWeapon.transform;
-            }
+            if (swordWeapon == null) swordWeapon = GetComponentInParent<SwordWeapon>();
         }
 
         if (swordTransform == null) return;

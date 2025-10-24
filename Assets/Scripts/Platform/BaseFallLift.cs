@@ -18,7 +18,7 @@ public abstract class BaseFallLift : MonoBehaviour{
         rb = GetComponent<Rigidbody2D>();
         initialPosition = transform.position;
         initialRotation = transform.rotation;
-        rb.isKinematic = true;
+        rb.bodyType = RigidbodyType2D.Kinematic;
     }
 
     private void OnCollisionEnter2D(Collision2D collision){
@@ -32,7 +32,7 @@ public abstract class BaseFallLift : MonoBehaviour{
         yield return new WaitForSeconds(fallDelay);
 
         // 落下開始
-        rb.isKinematic = false;
+        rb.bodyType = RigidbodyType2D.Dynamic;
         rb.gravityScale = 2f;
 
         yield return new WaitForSeconds(afterFallDelay);

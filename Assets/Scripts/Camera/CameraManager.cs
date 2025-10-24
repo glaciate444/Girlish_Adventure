@@ -1,53 +1,56 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
+using DG.Tweening;
 
-public class CameraManager : MonoBehaviour{
+public class CameraManager : MonoBehaviour {
     [SerializeField, Header("振動する時間")]
-    private float shakeTime;
+    private float shakeTime = 0.3f;
     [SerializeField, Header("振動の大きさ")]
-    private float shakeMagnitude;
-
+    private float shakeMagnitude = 0.5f;
     [SerializeField] private PlayerController player;
 
-    private Vector3 initpos;
-    private float shakeCount;
-    private int currentPlayerHP;
+    private Vector3 initPos;
+    private int lastPlayerHP;
 
-    void Start(){
-        //player = FindObjectOfType<PlayerController>();
-        currentPlayerHP = player.GetHP();
-        initpos = transform.position;
+    private void Start(){
+        initPos = transform.position;
+        lastPlayerHP = player != null ? player.GetHP() : 0;
+        
+        if (player != null){
+            player.OnDamage += () =>
+                transform.DOShakePosition(shakeTime, shakeMagnitude)
+                         .OnComplete(() => transform.position = initPos);
+        }
+        else{
+            Debug.LogError("CameraManager: Player reference is not assigned! Please assign the Player in the Inspector.");
+        }
     }
-    private void Update(){
+
+    void Update(){
+        if (player == null){
+            // プレイヤー消滅後のフォールバック処理
+            transform.position = new Vector3(initPos.x, initPos.y, transform.position.z);
+            return;
+        }
+
         ShakeCheck();
         FollowPlayer();
     }
-    // HPが減ると振動させる(将来的にDoTweenで調整)
+
     private void ShakeCheck(){
-        if(currentPlayerHP > player.GetHP()){
-            currentPlayerHP = player.GetHP();
-            shakeCount = 0.0f;
-            StartCoroutine(Shake());
-        }
-    }
-    // 振動時間(将来的にDoTweenで調整)
-    IEnumerator Shake(){
-        Vector3 initpos = transform.position;
-        while(shakeCount < shakeTime){
-            float x = initpos.x + Random.Range(-shakeMagnitude, shakeMagnitude);
-            float y = initpos.y + Random.Range(-shakeMagnitude, shakeMagnitude);
-            transform.position = new Vector3(x, y, initpos.z);
+        if (player == null) return;
 
-            shakeCount += Time.deltaTime;
-            yield return null;
+        int currentHP = player.GetHP();
+        if (currentHP < lastPlayerHP){
+            transform.DOShakePosition(shakeTime, shakeMagnitude)
+                     .OnComplete(() => transform.position = initPos);
         }
-        transform.position = initpos;
+        lastPlayerHP = currentHP;
     }
-    //カメラ追従(将来的にChinemachineCameraで調節)
+
     private void FollowPlayer(){
-        float x = player.transform.position.x;
-        x = Mathf.Clamp(x, initpos.x, Mathf.Infinity);
-        transform.position = new Vector3(x,transform.position.y, transform.position.z); 
-    }
+        if (player == null) return;
 
+        transform.position = new Vector3(player.transform.position.x, transform.position.y, transform.position.z);
+
+    }
 }

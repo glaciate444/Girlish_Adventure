@@ -9,6 +9,7 @@ TagManager:
   - PlayerAttack
   - BreakObject
   - Platform
+  - FallZone
   layers:
   - Default
   - TransparentFX
