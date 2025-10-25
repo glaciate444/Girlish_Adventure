@@ -41,6 +41,15 @@ public class GroundCheck : MonoBehaviour
         Collider2D hit = Physics2D.OverlapCircle(checkPoint.position, checkRadius, groundLayer);
         IsGrounded = hit != null;
 
+        if (hit == null)
+        {
+            Collider2D effectorHit = Physics2D.OverlapCircle(checkPoint.position, checkRadius, LayerMask.GetMask("Platform"));
+            if (effectorHit != null)
+            {
+                hit = effectorHit;
+            }
+        }
+
         if (hit != null)
         {
             currentGroundCollider = hit;
@@ -121,40 +130,30 @@ public class GroundCheck : MonoBehaviour
     /// 足元の動く床の速度を取得（MoveObjectがあれば優先、なければRigidbody2DのlinearVelocity）
     /// コンパイル時に MoveObject が存在しないプロジェクトでもエラーにならないよう GetComponentInParent を使う。
     /// </summary>
-    public Vector2 GetGroundVelocity()
-    {
+    public Vector2 GetGroundVelocity(){
         if (currentGroundCollider == null) return Vector2.zero;
 
         // まず MoveObject（ユーザー実装の動く床）があればそちらの速度を優先
         var moveObj = currentGroundCollider.GetComponentInParent<MoveObject>();
         if (moveObj != null)
         {
-            try
-            {
+            try{
                 return moveObj.GetVelocity();
-            }
-            catch
-            {
+            }catch{
                 // 万一 MoveObject に問題があればフォールバックする
             }
         }
 
         // 次に attachedRigidbody の linearVelocity を返す（存在すれば）
         var attachedRb = currentGroundCollider.attachedRigidbody;
-        if (attachedRb != null)
-        {
+        if (attachedRb != null){
             // Unity 6 で linearVelocity を使うプロジェクト向けに参照
             // 一部環境では 'velocity' を使うため最終的に安全にキャスト
-            try
-            {
-                // 優先: linearVelocity（Unity6 の API を想定）
+            try{                // 優先: linearVelocity（Unity6 の API を想定）
                 return attachedRb.linearVelocity;
-            }
-            catch
-            {
+            }catch{
                 // フォールバック: velocity プロパティ（従来の Unity）
-                try
-                {
+                try{
                     return attachedRb.linearVelocity;
                 }
                 catch
@@ -167,6 +166,11 @@ public class GroundCheck : MonoBehaviour
 
         return Vector2.zero;
     }
+    public MoveObject GetCurrentGroundMoveObject(){
+        if (currentGroundCollider == null) return null;
+        return currentGroundCollider.GetComponentInParent<MoveObject>();
+    }
+
 
     private void OnDrawGizmosSelected()
     {

@@ -68,6 +68,8 @@ public class PlayerController : MonoBehaviour{
     private float currentSlopeAngle = 0f;
     private bool wasOnSlope = false;
     private float slopeTransitionBuffer = 0f;
+    //リフト制御
+    private Vector2 lastLiftVelocity = Vector2.zero;
 
     // 非物理風制御用（物理は当たり判定用に残す）
     [Header("非物理風パラメータ")]
@@ -491,7 +493,7 @@ public class PlayerController : MonoBehaviour{
 
         // デバッグ用：動く床の速度確認
         if (Mathf.Abs(groundVelocity.x) > 0.01f){
-            Debug.Log($"動く床検出 - 床速度: {groundVelocity.x}, 適用前速度: {rb.linearVelocity.x}");
+            Debug.Log($"Check 211 - 動く床検出 - 床速度: {groundVelocity.x}, 適用前速度: {rb.linearVelocity.x}");
         }
 
         // 前フレーム適用分を相殺
@@ -505,7 +507,7 @@ public class PlayerController : MonoBehaviour{
         
         // デバッグ用：適用後の速度確認
         if (Mathf.Abs(groundVelocity.x) > 0.01f){
-            Debug.Log($"動く床適用後 - 最終速度: {rb.linearVelocity.x}");
+            Debug.Log($"Check 212 - 動く床適用後 - 最終速度: {rb.linearVelocity.x}");
         }
     }
     private IEnumerator DropThroughPlatform(){
@@ -549,6 +551,24 @@ public class PlayerController : MonoBehaviour{
                 Debug.Log("坂道移行バッファ終了");
             }
         }
+    }
+    private void LateUpdate(){
+        if (groundCheck != null && groundCheck.IsGrounded){
+            MoveObject lift = groundCheck.GetCurrentGroundMoveObject();
+
+            if (lift != null){
+                // Rigidbody2D.MovePositionで動くLiftの速度を取得してプレイヤーにも加算
+                Vector2 liftVel = lift.GetVelocity();
+
+                // Y方向は地面に押し付けないように制限
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x + liftVel.x, rb.linearVelocity.y);
+                lastLiftVelocity = liftVel;
+                return;
+            }
+        }
+
+        // リフトから離れたら速度補正解除
+        lastLiftVelocity = Vector2.zero;
     }
 
     void OnDrawGizmosSelected(){

@@ -252,7 +252,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GroundCheck
   groundLayer:
     serializedVersion: 2
-    m_Bits: 4352
+    m_Bits: 20736
   checkPoint: {fileID: 3767933829558806700}
   checkRadius: 0.3
 --- !u!1 &9125102980391096417
@@ -447,7 +447,7 @@ MonoBehaviour:
   groundCheckRadius: 0.3
   groundLayer:
     serializedVersion: 2
-    m_Bits: 256
+    m_Bits: 20736
   airControlFactor: 0.8
   slopeAcceptAngle: 50
   slopeTransitionSpeed: 0.1
