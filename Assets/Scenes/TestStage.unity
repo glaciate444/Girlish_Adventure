@@ -626,7 +626,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemySpawner
   enemy: {fileID: 7472621896509918319, guid: 464099fa8acc7544c9a3c6e57fae3261, type: 3}
-  player: {fileID: 2018378421}
+  player: {fileID: 0}
 --- !u!4 &293621092
 Transform:
   m_ObjectHideFlags: 0
@@ -851,7 +851,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CameraManager
   shakeTime: 0.25
   shakeMagnitude: 0.25
-  player: {fileID: 2018378421}
+  player: {fileID: 2031764992}
 --- !u!1 &573724113
 GameObject:
   m_ObjectHideFlags: 0
@@ -2216,17 +2216,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11d135f4a63e45a4b8c78c322cde5d4f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GoalFlag
---- !u!114 &2018378421 stripped
+--- !u!114 &2031764992 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8418731901948988810, guid: 8fb31abd443f094459400f12e6ab21fc, type: 3}
+  m_CorrespondingSourceObject: {fileID: 8704705484768810977, guid: 8fb31abd443f094459400f12e6ab21fc, type: 3}
   m_PrefabInstance: {fileID: 6472041373808855530}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 51e940012724eea4182d0fcffeb0c36a, type: 3}
+  m_Script: {fileID: 11500000, guid: 7e055e2aa78bfd24993db51e235445c3, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerControllerNew
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerController
 --- !u!1 &2065213436
 GameObject:
   m_ObjectHideFlags: 0
@@ -5408,7 +5408,7 @@ PrefabInstance:
     - target: {fileID: 6470461086822507484, guid: 9a2a0feb5dfbac74b8f585d82da78d86, type: 3}
       propertyPath: player
       value: 
-      objectReference: {fileID: 2018378421}
+      objectReference: {fileID: 0}
     - target: {fileID: 7452465657686244504, guid: 9a2a0feb5dfbac74b8f585d82da78d86, type: 3}
       propertyPath: m_Camera
       value: 

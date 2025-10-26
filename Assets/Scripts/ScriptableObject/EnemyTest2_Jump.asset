@@ -13,4 +13,9 @@ MonoBehaviour:
   m_Name: EnemyTest2_Jump
   m_EditorClassIdentifier: Assembly-CSharp::Move_Jump
   jumpInterval: 1.5
-  jumpForce: 7
+  jumpForce: 10
+  forwardSpeed: 3
+  groundCheckOffset: 0.1
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 0

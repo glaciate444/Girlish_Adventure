@@ -2,6 +2,7 @@
  * ファイル名 : Move_GroundPatrol.cs
  * 概要 : 地上移動型
  * Date : 2025/10/21
+ * Version : 0.00
  * ======================================= */
 using UnityEngine;
 
