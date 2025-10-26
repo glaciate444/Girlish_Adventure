@@ -173,8 +173,7 @@ public class GroundCheck : MonoBehaviour{
         return true;
     }
 
-    private void OnDrawGizmosSelected()
-    {
+    private void OnDrawGizmosSelected(){
         if (checkPoint == null) return;
         Gizmos.color = IsGrounded ? Color.green : Color.red;
         Gizmos.DrawWireSphere(checkPoint.position, checkRadius);

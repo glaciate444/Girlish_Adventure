@@ -8,10 +8,12 @@ public class PlayerController : MonoBehaviour{
     [SerializeField] private float moveSpeed = 7f;
     [SerializeField] private float jumpForce = 13f;
     [SerializeField] private float gravity = -50f; // カスタム重力（GravityScaleは0）
+    [Header("UIステータス")]
     public int hp;
     public int sp;
     public int maxHP = 10;
     public int maxSP = 6;
+    [Header("物理演算ステータス")]
     [SerializeField] private float airControlFactor = 0.9f; // 空中でもほぼ地上と同等の最大速度
     [SerializeField] private float jumpCutMultiplier = 0.4f; // ジャンプカット倍率
     [SerializeField] private float maxFallSpeed = -25f; // 最大落下速度
@@ -23,7 +25,6 @@ public class PlayerController : MonoBehaviour{
     [SerializeField] private float airDeceleration = 80f; // 空中の減速度
     [SerializeField] private bool forceAirStrafe = true; // 空中時の強制横移動を有効化
     [SerializeField] private float minAirStrafeSpeed = 1.5f; // 空中での最低横速度
-
     [Header("攻撃関連")]
     [SerializeField] private SwordFlipHandler swordHandler;
     [SerializeField] private WeaponBase weaponBase;
@@ -32,17 +33,15 @@ public class PlayerController : MonoBehaviour{
     [SerializeField] private int specialCost = 1;
     [SerializeField] private float attackGroundDuration = 0.3f;
     [SerializeField] private float attackAirDuration = 0.6f;
-
     [Header("Ground Check")]
     [SerializeField] private GroundCheck groundCheck;
     [SerializeField] private float dropThroughTime = 0.3f;
-
     [Header("アニメーション / 無敵点滅")]
     [SerializeField] private Animator animator;
     [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private HitEffectSpawner hitEffectSpawner;
     [SerializeField] private float damageTime = 3f;
-    [SerializeField] private float flashTime = 0.34f;
+    [SerializeField] private float flashTime = 0.2f;
 
     // 内部変数
     private Rigidbody2D rb;
@@ -59,7 +58,6 @@ public class PlayerController : MonoBehaviour{
     private bool isDead;
     private bool isInvincible;
     private PlayerInput playerInput;
-
     public delegate void OnDamageDelegate();
     public event OnDamageDelegate OnDamage;
 
@@ -80,8 +78,7 @@ public class PlayerController : MonoBehaviour{
 
     private void OnEnable(){
         if (playerInput == null) playerInput = GetComponent<PlayerInput>();
-        if (playerInput != null)
-        {
+        if (playerInput != null){
             // Inspector の UnityEvents が未設定でも動くよう、コードで配線
             playerInput.onActionTriggered += HandleActionTriggered;
 

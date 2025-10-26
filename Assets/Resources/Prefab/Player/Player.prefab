@@ -396,7 +396,7 @@ MonoBehaviour:
   spriteRenderer: {fileID: 3362155138497218852}
   hitEffectSpawner: {fileID: 1013685082542145824, guid: efda86670dc94e747a1371da620c0ec7, type: 3}
   damageTime: 3
-  flashTime: 0.34
+  flashTime: 0.2
 --- !u!50 &4553512148041190260
 Rigidbody2D:
   serializedVersion: 5
