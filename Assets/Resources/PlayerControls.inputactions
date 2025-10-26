@@ -47,7 +47,7 @@
                 {
                     "name": "KeyBoard",
                     "id": "52296840-26fc-4a5a-8325-3b1e7b4f615f",
-                    "path": "2DVector",
+                    "path": "2DVector(mode=2)",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -102,7 +102,7 @@
                 {
                     "name": "GamePad",
                     "id": "726ca3fc-8c8d-4057-9024-c6a3e8ec717a",
-                    "path": "2DVector",
+                    "path": "2DVector(mode=2)",
                     "interactions": "",
                     "processors": "",
                     "groups": "",

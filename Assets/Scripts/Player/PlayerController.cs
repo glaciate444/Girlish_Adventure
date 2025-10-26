@@ -136,7 +136,7 @@ public class PlayerController : MonoBehaviour
         if (isAttacking) return;
 
         float moveX = moveInput.x;
-        
+
         float targetSpeed = moveX * moveSpeed * (isGrounded ? 1f : airControlFactor);
 
         // 強制横移動救済: 空中で入力があるのに横が0に張り付く場合
@@ -149,7 +149,7 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        // 加速度/減速度で速度を追従
+        // 物理ベースの加速度計算（左右対称）
         float accel = 0f;
         if (Mathf.Abs(moveX) > 0.05f)
         {
@@ -161,9 +161,22 @@ public class PlayerController : MonoBehaviour
             targetSpeed = 0f;
         }
 
-        velocity.x = Mathf.MoveTowards(velocity.x, targetSpeed, accel * Time.fixedDeltaTime);
+        // Mathf.MoveTowardsの代わりに物理ベースの計算を使用
+        float speedDiff = targetSpeed - velocity.x;
+        float accelForce = accel * Time.fixedDeltaTime;
+        
+        if (Mathf.Abs(speedDiff) <= accelForce)
+        {
+            // 目標速度に到達または超える場合
+            velocity.x = targetSpeed;
+        }
+        else
+        {
+            // 加速度を適用
+            velocity.x += Mathf.Sign(speedDiff) * accelForce;
+        }
 
-        // 左右対称の最大速度でクランプ（コード上の非対称を完全排除）
+        // 左右対称の最大速度でクランプ
         float maxHoriz = isGrounded ? moveSpeed : moveSpeed * airControlFactor;
         if (velocity.x > maxHoriz){
             velocity.x = maxHoriz;
@@ -171,8 +184,6 @@ public class PlayerController : MonoBehaviour
         else if (velocity.x < -maxHoriz){
             velocity.x = -maxHoriz;
         }
-
-        
 
         // さらなる保険: 空中時に水平速度がゼロへ貼り付くことを抑止
         if (forceAirStrafe && !isGrounded && Mathf.Abs(moveX) > 0.05f)
