@@ -1,535 +1,524 @@
-﻿/* =======================================
- * ファイル名 : PlayerController.cs
- * 概要 : プレイヤースクリプト（非物理風・完全安定版）
- * Date : 2025/10/24
- * Version : 0.02
- * ======================================= */
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerController : MonoBehaviour{
-    [Header("プレイヤーの移動の速さ")]
-    public float moveSpeed = 5f;
-    [Header("プレイヤーのジャンプの高さ（垂直速度）")]
-    public float jumpForce = 12f;
-    [Header("プレイヤーのHP")]
-    public int hp = 10;
+//[RequireComponent(typeof(Rigidbody2D), typeof(CapsuleCollider2D))]
+public class PlayerController : MonoBehaviour
+{
+    [Header("基本ステータス")]
+    [SerializeField] private float moveSpeed = 7f;
+    [SerializeField] private float jumpForce = 13f;
+    [SerializeField] private float gravity = -50f; // カスタム重力（GravityScaleは0）
+    public int hp;
+    public int sp;
     public int maxHP = 10;
-    [Header("プレイヤーのSP")]
-    public int sp = 6;
     public int maxSP = 6;
-    [Header("無敵時間・点滅")]
-    public float damageTime = 3f;
-    public float flashTime = 0.34f;
-    [Header("すり抜け時間")]
-    [SerializeField] private float dropThroughTime = 0.3f;
+    [SerializeField] private float airControlFactor = 0.9f; // 空中でもほぼ地上と同等の最大速度
+    [SerializeField] private float jumpCutMultiplier = 0.4f; // ジャンプカット倍率
+    [SerializeField] private float maxFallSpeed = -25f; // 最大落下速度
+    [SerializeField] private float groundFriction = 0.8f; // 地上での摩擦（無入力時のみ）
+    [SerializeField] private float airFriction = 0.98f; // 空中での空気抵抗（無入力時に少しだけ）
+    [SerializeField] private float groundAcceleration = 100f; // 地上の加速度
+    [SerializeField] private float groundDeceleration = 100f; // 地上の減速度
+    [SerializeField] private float airAcceleration = 140f; // 空中の加速度（強め）
+    [SerializeField] private float airDeceleration = 80f; // 空中の減速度
+    [SerializeField] private bool forceAirStrafe = true; // 空中時の強制横移動を有効化
+    [SerializeField] private float minAirStrafeSpeed = 1.5f; // 空中での最低横速度
 
-    private bool facingRight = true;
-    [Header("攻撃アクション反転など")]
+    [Header("攻撃関連")]
     [SerializeField] private SwordFlipHandler swordHandler;
     [SerializeField] private WeaponBase weaponBase;
-    [Header("スペシャル技")]
     [SerializeField] private GameObject playerBulletPrefab;
     [SerializeField] private Transform firePoint;
     [SerializeField] private int specialCost = 1;
-    [Header("ヒットしたエフェクト")]
-    [SerializeField] private HitEffectSpawner hitEffectSpawner;
+    [SerializeField] private float attackGroundDuration = 0.3f;
+    [SerializeField] private float attackAirDuration = 0.6f;
 
+    [Header("Ground Check")]
+    [SerializeField] private GroundCheck groundCheck;
+    [SerializeField] private float dropThroughTime = 0.3f;
+
+    [Header("アニメーション / 無敵点滅")]
+    [SerializeField] private Animator animator;
+    [SerializeField] private SpriteRenderer spriteRenderer;
+    [SerializeField] private HitEffectSpawner hitEffectSpawner;
+    [SerializeField] private float damageTime = 3f;
+    [SerializeField] private float flashTime = 0.34f;
+
+    // 内部変数
     private Rigidbody2D rb;
     private Vector2 moveInput;
+    private Vector2 velocity;
+    private bool facingRight = true;
+    private bool isGrounded;
     private bool jumpPressed;
     private bool jumpHeld;
     private bool jumpCutApplied;
-    private Animator anim;
-    private SpriteRenderer sr;
-    // 動く床の水平速度を前フレームからの差分で補正するための記録
-    private float appliedGroundVelocityX = 0f;
-
-    [Header("Ground Check オブジェクト参照")]
-    [SerializeField] private GroundCheck groundCheck;
-    public float groundCheckRadius = 0.2f;
-    public LayerMask groundLayer;
-
-    private bool isDropping = false;
-    private PlatformEffector2D currentEffector;
-    //アニメーションbool値
-    private bool isGrounded;
-    private bool isAttack;
+    private bool isDropping;
     private bool isAttacking;
     private bool isAirAttacking;
-    //そのほかのフィールド変数
-    private bool isInvincible = false;
+    private bool isDead;
+    private bool isInvincible;
+    private PlayerInput playerInput;
+
     public delegate void OnDamageDelegate();
     public event OnDamageDelegate OnDamage;
-    private bool isDead = false;
-    
-    // シンプルな坂道制御用の変数
-    private float currentSlopeAngle = 0f;
-    private bool wasOnSlope = false;
-    private float slopeTransitionBuffer = 0f;
-    //リフト制御
-    private Vector2 lastLiftVelocity = Vector2.zero;
 
-    // 非物理風制御用（物理は当たり判定用に残す）
-    [Header("非物理風パラメータ")]
-    [SerializeField] private float airControlFactor = 0.8f; // 空中の横移動倍率
-    [SerializeField] private float slopeAcceptAngle = 50f; // これ以下は平地扱い
-    [SerializeField] private float slopeTransitionSpeed = 0.1f; // 坂道移行の滑らかさ
-    [SerializeField] private float angleHysteresis = 5f; // 角度判定のヒステリシス
-
-    void Start(){
+    void Awake()
+    {
         rb = GetComponent<Rigidbody2D>();
-        anim = GetComponent<Animator>();
-        sr = GetComponent<SpriteRenderer>();
-        
-        // 物理演算の干渉を防ぐ設定（Unity 6対応）
-        if (rb != null){
-            rb.freezeRotation = true; // 回転を固定
-            rb.linearDamping = 0f; // 線形減衰を0に（Unity 6の新しいAPI）
-            rb.angularDamping = 0f; // 角減衰を0に（Unity 6の新しいAPI）
-        }
+        rb.bodyType = RigidbodyType2D.Dynamic;
+        rb.linearVelocity = velocity; // AddForceではなく直接制御
+        rb.simulated = true;
+        rb.gravityScale = 0f;
+        rb.freezeRotation = true;
+        rb.linearDamping = 0f;
+        rb.angularDamping = 0f;
 
-        if (groundCheck != null){
-            groundCheck.OnGroundedChanged += OnGroundedChanged;
-        }
-
-        if (anim != null){
-            anim.SetBool("FacingRight", facingRight);
-        }
-        Debug.Log($"Start - 初期facingRight: {facingRight}");
-    }
-    private void OnDestroy(){
-        if (groundCheck != null){
-            groundCheck.OnGroundedChanged -= OnGroundedChanged;
-        }
+        if (!animator) animator = GetComponent<Animator>();
+        if (!spriteRenderer) spriteRenderer = GetComponent<SpriteRenderer>();
+        playerInput = GetComponent<PlayerInput>();
     }
 
-    void Update(){
-        if (anim != null){
-            anim.SetBool("Walk", Mathf.Abs(moveInput.x) > 0.1f);
-            // 攻撃中はJumpパラメータを更新しない（空中攻撃のため）
-            if (!isAttacking){
-                anim.SetBool("Jump", !isGrounded);
-            }
+    void OnEnable()
+    {
+        if (playerInput == null) playerInput = GetComponent<PlayerInput>();
+        if (playerInput != null)
+        {
+            // Inspector の UnityEvents が未設定でも動くよう、コードで配線
+            playerInput.onActionTriggered += HandleActionTriggered;
+
+            // 常に Player マップを有効化
+            if (playerInput.currentActionMap == null || playerInput.currentActionMap.name != "Player")
+                playerInput.SwitchCurrentActionMap("Player");
+
+            if (!playerInput.actions.enabled)
+                playerInput.actions.Enable();
         }
-        ForceSyncFacingDirection();
-        
-        // シンプルな坂道制御
-        UpdateSlopeTransition();
     }
 
-    private void FixedUpdate(){
+    void OnDisable()
+    {
+        if (playerInput != null)
+            playerInput.onActionTriggered -= HandleActionTriggered;
+    }
+
+    void Update()
+    {
         if (isDead) return;
 
-        // 動く床の速度補正（当たり判定はPhysicsに任せる）
-        ApplyMovingPlatformVelocity();
+		// 入力・見た目更新のみ（物理はFixedUpdate）
+		LookMoveDirection();
+        UpdateAnimation();
+    }
 
-        if (!isAttacking){
-            MoveAlongSlope(); // linearVelocity を使用した移動（AddForceは使わない）
+    void FixedUpdate()
+    {
+        if (isDead) return;
+
+        UpdateGroundState();
+        HandleMovement();
+        HandleJump();
+        ApplyGravity();
+        ApplyVelocity();
+    }
+
+    private void UpdateGroundState()
+    {
+        isGrounded = groundCheck != null ? groundCheck.IsGrounded :
+            Physics2D.Raycast(transform.position, Vector2.down, 0.1f, LayerMask.GetMask("Ground"));
+
+        animator?.SetBool("IsGrounded", isGrounded);
+    }
+
+    private void HandleMovement()
+    {
+        if (isAttacking) return;
+
+        float moveX = moveInput.x;
+        
+        float targetSpeed = moveX * moveSpeed * (isGrounded ? 1f : airControlFactor);
+
+        // 強制横移動救済: 空中で入力があるのに横が0に張り付く場合
+        if (forceAirStrafe && !isGrounded)
+        {
+            if (Mathf.Abs(moveX) > 0.05f && Mathf.Abs(velocity.x) < 0.01f)
+            {
+                // 最低限の横速度を与える
+                velocity.x = Mathf.Sign(moveX) * Mathf.Max(minAirStrafeSpeed, Mathf.Abs(velocity.x));
+            }
         }
 
-        LookMoveDirection();
-        Dead();
+        // 加速度/減速度で速度を追従
+        float accel = 0f;
+        if (Mathf.Abs(moveX) > 0.05f)
+        {
+            accel = isGrounded ? groundAcceleration : airAcceleration;
+        }
+        else
+        {
+            accel = isGrounded ? groundDeceleration : airDeceleration;
+            targetSpeed = 0f;
+        }
 
-        // 可変ジャンプ処理（ただしジャンプ実行後はジャンプ解除でカット）
-        if (!jumpHeld && !jumpCutApplied && rb.linearVelocity.y > 0){
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * 0.5f);
+        velocity.x = Mathf.MoveTowards(velocity.x, targetSpeed, accel * Time.fixedDeltaTime);
+
+        // 左右対称の最大速度でクランプ（コード上の非対称を完全排除）
+        float maxHoriz = isGrounded ? moveSpeed : moveSpeed * airControlFactor;
+        if (velocity.x > maxHoriz){
+            velocity.x = maxHoriz;
+        }
+        else if (velocity.x < -maxHoriz){
+            velocity.x = -maxHoriz;
+        }
+
+        
+
+        // さらなる保険: 空中時に水平速度がゼロへ貼り付くことを抑止
+        if (forceAirStrafe && !isGrounded && Mathf.Abs(moveX) > 0.05f)
+        {
+            if (Mathf.Abs(velocity.x) < minAirStrafeSpeed)
+                velocity.x = Mathf.Sign(moveX) * minAirStrafeSpeed;
+        }
+
+        // 無入力時に微小速度を丸める
+        if (Mathf.Abs(moveX) <= 0.05f && Mathf.Abs(velocity.x) < 0.05f)
+            velocity.x = 0f;
+    }
+
+    private void HandleJump()
+    {
+        if (jumpPressed && isGrounded && !isAttacking)
+        {
+            velocity.y = jumpForce;
+            jumpPressed = false;
+            jumpCutApplied = false;
+            animator?.SetTrigger("Jump");
+
+            // ジャンプ直後の慣性殺し対策: 横入力があるなら初速を保証
+            if (forceAirStrafe && Mathf.Abs(moveInput.x) > 0.05f)
+            {
+                if (Mathf.Abs(velocity.x) < minAirStrafeSpeed)
+                    velocity.x = Mathf.Sign(moveInput.x) * minAirStrafeSpeed;
+            }
+        }
+
+        // ジャンプカット処理（より厳しい減速）
+        if (!jumpHeld && !jumpCutApplied && velocity.y > 0f)
+        {
+            velocity.y *= jumpCutMultiplier;
             jumpCutApplied = true;
         }
+    }
 
-        // Animator同期
-        if (anim != null){
-            // 攻撃中はJumpパラメータを更新しない（空中攻撃のため）
-            if (!isAttacking){
-                anim.SetBool("Jump", !isGrounded);
-            }
-            anim.SetBool("Walk", Mathf.Abs(moveInput.x) > 0.1f);
+    private void ApplyGravity()
+    {
+        if (!isGrounded)
+        {
+            // カスタム重力適用
+            velocity.y += gravity * Time.fixedDeltaTime;
+            // 最大落下速度制限
+            if (velocity.y < maxFallSpeed)
+                velocity.y = maxFallSpeed;
+        }
+        else
+        {
+            // 接地時は垂直速度を即座にクリア
+            if (velocity.y < 0f)
+                velocity.y = 0f;
         }
     }
 
-    private void MoveAlongSlope(){
-        if (isAttack || isAttacking) return;
-
-        // 左右移動を統一するため、入力値を正規化
-        float moveX = 0f;
-        if (Mathf.Abs(moveInput.x) > 0.1f){
-            moveX = Mathf.Sign(moveInput.x); // 左右の方向のみを取得（-1 または 1）
-        }
-        float rawSlopeAngle = 0f;
-
-        if (groundCheck != null && groundCheck.IsGrounded){
-            rawSlopeAngle = Vector2.Angle(groundCheck.GroundNormal, Vector2.up);
+    private void ApplyVelocity()
+    {
+        // 動く床の速度を考慮（接地時のみプレイヤー速度に合算）
+        Vector2 finalVelocity = velocity;
+        if (groundCheck != null && isGrounded)
+        {
+            Vector2 groundVelocity = groundCheck.GetGroundVelocity();
+            finalVelocity += groundVelocity;
         }
 
-        // 角度の滑らかな変化（ヒステリシス適用）
-        float targetAngle = rawSlopeAngle;
-        if (wasOnSlope && rawSlopeAngle < slopeAcceptAngle + angleHysteresis){
-            // 坂道から平地への移行時は緩やかに角度を減らす
-            targetAngle = Mathf.Lerp(currentSlopeAngle, rawSlopeAngle, slopeTransitionSpeed);
-        }else{
-            // 通常時は即座に角度を更新
-            targetAngle = rawSlopeAngle;
-        }
-        
-        currentSlopeAngle = targetAngle;
-        bool isCurrentlyOnSlope = currentSlopeAngle > slopeAcceptAngle;
-        
-        // シンプルな坂道制御：移行時にバッファを設定
-        if (wasOnSlope && !isCurrentlyOnSlope){
-            slopeTransitionBuffer = 0.1f; // 0.1秒のバッファ
-            Debug.Log("坂道から平地への移行検出");
-        }
-        
-        wasOnSlope = isCurrentlyOnSlope;
+        // AddForceは使わず、最終的な速度を直接適用
+        rb.linearVelocity = finalVelocity;
+    }
 
-        // シンプルな移動制御
-        if (groundCheck != null && groundCheck.IsGrounded && currentSlopeAngle <= slopeAcceptAngle){
-            float targetVX = moveX * moveSpeed;
-            
-            // デバッグ用：左右速度の確認
-            if (Mathf.Abs(moveX) > 0.1f){
-                Debug.Log($"地上移動 - 正規化後moveX: {moveX}, targetVX: {targetVX}, 現在速度: {rb.linearVelocity.x}");
-            }
-            
-            // 移行バッファ中は垂直速度を制限
-            if (slopeTransitionBuffer > 0f){
-                float currentVY = rb.linearVelocity.y;
-                float limitedVY = Mathf.Max(currentVY, -1f); // 下向き速度を制限
-                rb.linearVelocity = new Vector2(targetVX, limitedVY);
-            }else{
-                rb.linearVelocity = new Vector2(targetVX, rb.linearVelocity.y);
-            }
-        }
-        // 坂道では移動を制限
-        else if (groundCheck != null && groundCheck.IsGrounded && currentSlopeAngle > slopeAcceptAngle){
-            float currentVX = rb.linearVelocity.x;
-            float newVX = Mathf.Lerp(currentVX, 0f, slopeTransitionSpeed * 2f);
-            rb.linearVelocity = new Vector2(newVX, rb.linearVelocity.y);
-        }
-        // 空中は空中制御（左右速度を統一）
-        else{
-            float targetVX = moveX * moveSpeed * airControlFactor;
-            
-            // デバッグ用：左右速度の確認
-            if (Mathf.Abs(moveX) > 0.1f){
-                Debug.Log($"空中移動 - 正規化後moveX: {moveX}, targetVX: {targetVX}, 現在速度: {rb.linearVelocity.x}");
-            }
-            
-            // 左右の速度を統一するため、直接設定（Lerpを削除）
-            rb.linearVelocity = new Vector2(targetVX, rb.linearVelocity.y);
-        }
+    private void HandleActionTriggered(InputAction.CallbackContext context)
+    {
+        var mapName = context.action.actionMap != null ? context.action.actionMap.name : string.Empty;
+        if (mapName != "Player") return;
 
-        // 最大速度制限（左右統一）
-        float currentSpeed = Mathf.Abs(rb.linearVelocity.x);
-        if (currentSpeed > moveSpeed){
-            float direction = Mathf.Sign(rb.linearVelocity.x);
-            rb.linearVelocity = new Vector2(direction * moveSpeed, rb.linearVelocity.y);
+        switch (context.action.name)
+        {
+            case "Move":
+                OnMove(context);
+                break;
+            case "Jump":
+                OnJump(context);
+                break;
+            case "Attack":
+                OnAttack(context);
+                break;
+            case "SpecialA":
+                OnSpecialA(context);
+                break;
         }
     }
 
-    private void LookMoveDirection(){
-        if (moveInput.x > 0.1f){
-            facingRight = true;
-            if (sr != null) sr.flipX = false;
-        }else if (moveInput.x < -0.1f){
-            facingRight = false;
-            if (sr != null) sr.flipX = true;
-        }
+    private void UpdateFacing()
+    {
+        if (moveInput.x > 0.1f) facingRight = true;
+        else if (moveInput.x < -0.1f) facingRight = false;
 
-        if (sr != null){
-            if (!sr.flipX && !facingRight){
-                facingRight = true;
-            }else if (sr.flipX && facingRight){
-                facingRight = false;
-            }
-        }
-        swordHandler?.UpdateSwordDirection(facingRight);
+        if (spriteRenderer != null)
+            spriteRenderer.flipX = !facingRight;
 
-        if (weaponBase != null){
-            var swordWeapon = weaponBase.GetComponent<SwordWeapon>();
-            if (swordWeapon != null){
-                swordWeapon.SetFacingRight(facingRight);
-            }
-        }else{
-            Debug.LogWarning("weaponBaseがnullです。InspectorでWeaponBaseを設定してください。");
-        }
-
-        if (anim != null){
-            anim.SetBool("FacingRight", facingRight);
-        }
+        animator?.SetBool("FacingRight", facingRight);
     }
 
-    private void ForceSyncFacingDirection(){
-        if (sr == null || anim == null) return;
-        if (!sr.flipX && !facingRight){
-            facingRight = true;
-            anim.SetBool("FacingRight", true);
-        }else if (sr.flipX && facingRight){
-            facingRight = false;
-            anim.SetBool("FacingRight", false);
-        }
+    private void UpdateAnimation()
+    {
+		animator?.SetBool("Walk", Mathf.Abs(moveInput.x) > 0.1f);
+		// 攻撃中はJumpフラグを上書きしない（空中攻撃が吸い込まれるのを防止）
+		if (!isAttacking)
+			animator?.SetBool("Jump", !isGrounded);
     }
 
-    private void OnGroundedChanged(bool grounded){
-        isGrounded = grounded;
-        if (anim != null){
-            anim.SetBool("IsGrounded", grounded);
-        }
-    }
-
-    private void OnCollisionEnter2D(Collision2D other){
-        if (isInvincible) return;
-        if (other.gameObject.CompareTag("Enemy")){
-            HitEnemy(other.gameObject);
-            hitEffectSpawner.SpawnHitEffect(other.transform.position);
-        }
-    }
-
-    private void HitEnemy(GameObject enemy){
-        float halfscaleY = transform.lossyScale.y / 2.0f;
-        float enemyHalfScaleY = enemy.transform.lossyScale.y / 2.0f;
-        if (transform.position.y - (halfscaleY - 0.1f) >= enemy.transform.position.y + (enemyHalfScaleY - 0.1f)){
-            Destroy(enemy);
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce * 0.5f);
-            gameObject.layer = LayerMask.NameToLayer("Player");
-        }else{
-            if (!isInvincible){
-                gameObject.layer = LayerMask.NameToLayer("PlayerDamage");
-                enemy.GetComponent<BaseEnemy>().Attack(this);
-                StartCoroutine(Damage());
-            }
-        }
-    }
-
-    private IEnumerator Damage(){
-        if (isInvincible) yield break;
-        isInvincible = true;
-        gameObject.layer = LayerMask.NameToLayer("PlayerDamage");
-        Color color = sr.color;
-        float elapsed = 0f;
-        while (elapsed < damageTime){
-            sr.color = new Color(color.r, color.g, color.b, 0.1f);
-            yield return new WaitForSeconds(flashTime);
-            sr.color = new Color(color.r, color.g, color.b, 1.0f);
-            yield return new WaitForSeconds(flashTime);
-            elapsed += flashTime * 2f;
-        }
-        sr.color = color;
-        gameObject.layer = LayerMask.NameToLayer("Player");
-        isInvincible = false;
-    }
-
-    private void OnTriggerEnter2D(Collider2D other){
-        if (other.CompareTag("FallZone")){
-            StartCoroutine(HandleFallDeath());
-        }
-    }
-
-    private IEnumerator HandleFallDeath(){
-        yield return new WaitForSeconds(1f);
-        Destroy(gameObject);
-    }
-
-    private void Dead(){
-        if (isDead) return;
-        if (hp > 0) return;
-        isDead = true;
-        Debug.Log("Player Dead");
-        this.gameObject.SetActive(false);
-    }
-
-    // Input callbacks (Unity Input System)
-    public void OnMove(InputAction.CallbackContext context){
-        moveInput = context.ReadValue<Vector2>();
-        
-        // デバッグ用：入力値の確認
-        if (Mathf.Abs(moveInput.x) > 0.1f){
-            Debug.Log($"入力値 - moveInput.x: {moveInput.x}, 絶対値: {Mathf.Abs(moveInput.x)}");
-        }
-        
-        LookMoveDirection();
-
-        if (moveInput.y < -0.5f && !isDropping && groundCheck != null && groundCheck.IsGrounded){
-            StartCoroutine(DropThroughPlatform());
-        }
-    }
-
-    public void OnJump(InputAction.CallbackContext context){
-        if (context.started){
-            jumpPressed = true;
-            jumpHeld = true;
-
-            if (isGrounded && !isAttacking){
-                float slopeAngle = 0f;
-                if (groundCheck != null && groundCheck.IsGrounded)
-                    slopeAngle = Vector2.Angle(groundCheck.GroundNormal, Vector2.up);
-
-                if (slopeAngle <= slopeAcceptAngle){
-                    rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
-                    jumpPressed = false;
-                    jumpCutApplied = false;
-                    if (anim != null) anim.SetTrigger("Jump");
-                }else{
-                    // 角度が急ならジャンプ禁止（安定のため）
-                }
-            }
-        }else if (context.canceled){
-            jumpHeld = false;
-            if (rb.linearVelocity.y > 0f){
-                rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * 0.5f);
-            }
-        }
-    }
-
-    public void OnAttack(InputAction.CallbackContext context){
-        if (context.started && !isAttacking){
+    // ===================== 攻撃処理 =====================
+    public void OnAttack(InputAction.CallbackContext context)
+    {
+        if (context.started && !isAttacking && !isDead)
+        {
             isAttacking = true;
             isAirAttacking = !isGrounded;
+			animator?.SetBool("IsAttacking", true);
 
-            // 攻撃トリガーを設定（空中攻撃の場合は特別な処理）
-            if (anim != null){
-                if (isAirAttacking){
-                    // 空中攻撃の場合は、Jumpをfalseにしてから強制的にAirAttackアニメーションを再生
-                    Debug.Log($"攻撃前 - Jump: {anim.GetBool("Jump")}, IsGrounded: {isGrounded}");
-                    anim.SetBool("Jump", false);
-                    Debug.Log($"攻撃後 - Jump: {anim.GetBool("Jump")}");
-                    anim.Play(facingRight ? "AirAttack_Sword_Right" : "AirAttack_Sword_Left", 0, 0f);
-                    Debug.Log($"空中攻撃開始 - Jumpをfalseに設定、FacingRight: {facingRight}, IsGrounded: {isGrounded}");
-                }else{
-                    // 地上攻撃の場合は通常の処理
-                    anim.ResetTrigger("Attack");
-                    anim.SetTrigger("Attack");
+            if (animator != null)
+            {
+                if (isAirAttacking)
+                {
+                    animator.SetBool("Jump", false);
+                    animator.Play(facingRight ? "AirAttack_Sword_Right" : "AirAttack_Sword_Left", 0, 0f);
+                }
+                else
+                {
+                    animator.ResetTrigger("Attack");
+                    animator.SetTrigger("Attack");
                 }
             }
 
             StartCoroutine(AttackRoutine());
 
-            if (weaponBase != null){
+            if (weaponBase != null)
                 weaponBase.StartAttack(moveInput);
-            }else{
-                Debug.LogError("weaponBaseがnullです。攻撃処理をスキップします。");
-            }
         }
     }
 
-    public void OnSpecialA(InputAction.CallbackContext context){
-        if (!context.performed) return;
-        if (sp < specialCost) return;
+    private IEnumerator AttackRoutine()
+    {
+        float duration = isGrounded ? 0.3f : 0.6f;
+        yield return new WaitForSeconds(duration);
+        if (isAirAttacking) animator?.SetBool("Jump", true);
+        isAttacking = false;
+        isAirAttacking = false;
+		animator?.SetBool("IsAttacking", false);
+    }
+    private void LookMoveDirection()
+    {
+        if (moveInput.x > 0.1f)
+        {
+            facingRight = true;
+            if (spriteRenderer != null) spriteRenderer.flipX = false;
+        }
+        else if (moveInput.x < -0.1f)
+        {
+            facingRight = false;
+            if (spriteRenderer != null) spriteRenderer.flipX = true;
+        }
+
+        if (spriteRenderer != null)
+        {
+            if (!spriteRenderer.flipX && !facingRight)
+            {
+                facingRight = true;
+            }
+            else if (spriteRenderer.flipX && facingRight)
+            {
+                facingRight = false;
+            }
+        }
+        swordHandler?.UpdateSwordDirection(facingRight);
+
+        if (weaponBase != null)
+        {
+            var swordWeapon = weaponBase.GetComponent<SwordWeapon>();
+            if (swordWeapon != null)
+            {
+                swordWeapon.SetFacingRight(facingRight);
+            }
+        }
+        else
+        {
+            Debug.LogWarning("weaponBaseがnullです。InspectorでWeaponBaseを設定してください。");
+        }
+
+        if (animator != null)
+        {
+            animator.SetBool("FacingRight", facingRight);
+        }
+    }
+
+    // AnimationEvent から呼ばれる想定の受け先
+    public void EndAttack()
+	{
+		if (isDead) return;
+		if (isAirAttacking) animator?.SetBool("Jump", true);
+		isAttacking = false;
+		isAirAttacking = false;
+		// 武器側の終了もリレー（イベントで終わる構成でも安全）
+		if (weaponBase != null)
+			weaponBase.EndAttack();
+		animator?.SetBool("IsAttacking", false);
+	}
+
+    public void OnSpecialA(InputAction.CallbackContext context)
+    {
+        if (!context.performed || sp < specialCost) return;
         UseSpecial(specialCost);
         var bulletObj = Instantiate(playerBulletPrefab, firePoint.position, Quaternion.identity);
         var bullet = bulletObj.GetComponent<PlayerBullet>();
-        if (bullet != null){
+        if (bullet != null)
+        {
             Vector2 dir = facingRight ? Vector2.right : Vector2.left;
             bullet.Setup(dir);
         }
     }
 
-    private IEnumerator AttackRoutine(){
-        // 攻撃トリガーは既にOnAttackで設定済み
-        yield return new WaitForSeconds(0.05f);
-        float attackDuration = isGrounded ? 0.3f : 0.6f;
-        yield return new WaitForSeconds(attackDuration);
-        
-        // 空中攻撃の場合は、AirAttackStateBehaviourでトリガーをリセット
-        // 地上攻撃の場合はここでリセット
-        if (anim != null && isGrounded) {
-            anim.ResetTrigger("Attack");
-        }
-        
-        // 空中攻撃終了時にJumpパラメータをtrueに戻す（バックアップ処理）
-        if (anim != null && isAirAttacking && !isGrounded){
-            anim.SetBool("Jump", true);
-            Debug.Log("AttackRoutine - 空中攻撃終了、Jumpパラメータをtrueに戻す");
-        }
-        
-        isAttacking = false;
-        isAirAttacking = false;
-        
-        // 攻撃終了後、Jumpパラメータを正常に復元
-        if (anim != null && !isGrounded){
-            anim.SetBool("Jump", true);
-            Debug.Log("攻撃終了後 - Jumpパラメータを復元");
+    // ===================== ダメージ処理 =====================
+    private void OnCollisionEnter2D(Collision2D other)
+    {
+        if (isInvincible || isDead) return;
+
+        if (other.gameObject.CompareTag("Enemy"))
+        {
+            HitEnemy(other.gameObject);
+            hitEffectSpawner?.SpawnHitEffect(other.transform.position);
         }
     }
 
-    public void TakeDamage(int damage){
+    private void HitEnemy(GameObject enemy)
+    {
+        float playerY = transform.position.y;
+        float enemyY = enemy.transform.position.y;
+
+        if (playerY > enemyY + 0.4f)
+        {
+            Destroy(enemy);
+            velocity.y = jumpForce * 0.5f;
+        }
+        else
+        {
+            TakeDamage(1);
+            StartCoroutine(DamageFlash());
+        }
+    }
+
+    private IEnumerator DamageFlash()
+    {
+        isInvincible = true;
+        float elapsed = 0f;
+        Color c = spriteRenderer.color;
+
+        while (elapsed < damageTime)
+        {
+            spriteRenderer.color = new Color(c.r, c.g, c.b, 0.2f);
+            yield return new WaitForSeconds(flashTime);
+            spriteRenderer.color = new Color(c.r, c.g, c.b, 1f);
+            yield return new WaitForSeconds(flashTime);
+            elapsed += flashTime * 2f;
+        }
+
+        spriteRenderer.color = c;
+        isInvincible = false;
+    }
+
+    // ===================== ステータス制御 =====================
+    public void TakeDamage(int dmg)
+    {
         if (isInvincible) return;
-        hp = Mathf.Clamp(hp - damage, 0, maxHP);
+        hp = Mathf.Clamp(hp - dmg, 0, maxHP);
         UIManager.Instance?.UpdateHP(hp, maxHP);
         OnDamage?.Invoke();
+        if (hp <= 0) Die();
     }
 
-    public void HealHP(int healAmount){
-        hp = Mathf.Clamp(hp + healAmount, 0, maxHP);
+    public void HealHP(int amount)
+    {
+        hp = Mathf.Clamp(hp + amount, 0, maxHP);
         UIManager.Instance?.UpdateHP(hp, maxHP);
     }
 
-    public void UseSpecial(int useSP){
-        sp = Mathf.Clamp(sp - useSP, 0, maxSP);
+    public void UseSpecial(int cost)
+    {
+        sp = Mathf.Clamp(sp - cost, 0, maxSP);
         UIManager.Instance?.UpdateSP(sp, maxSP);
     }
 
-    public void HealSP(int healSpAmount){
-        sp = Mathf.Clamp(sp + healSpAmount, 0, maxSP);
+    public void HealSP(int amount)
+    {
+        sp = Mathf.Clamp(sp + amount, 0, maxSP);
         UIManager.Instance?.UpdateSP(sp, maxSP);
     }
 
-    public int GetHP() { return hp; }
-    public int GetSP() { return sp; }
-
-    public void EndAttack(){
-        isAttack = false;
-        anim?.ResetTrigger("Attack");
+    private void Die()
+    {
+        isDead = true;
+        animator?.Play("Death");
+        this.enabled = false;
     }
 
-    // 動く床の速度補正（左右速度を統一）
-    private void ApplyMovingPlatformVelocity(){
-        if (!isGrounded) return;
+    // ===================== 入力 =====================
+    public void OnMove(InputAction.CallbackContext context)
+    {
+        moveInput = context.ReadValue<Vector2>();
 
-        Vector2 groundVelocity = Vector2.zero;
-        if (groundCheck != null)
-            groundVelocity = groundCheck.GetGroundVelocity();
+        if (moveInput.y < -0.5f && isGrounded && !isDropping)
+            StartCoroutine(DropThroughPlatform());
+    }
 
-        // デバッグ用：動く床の速度確認
-        if (Mathf.Abs(groundVelocity.x) > 0.01f){
-            Debug.Log($"Check 211 - 動く床検出 - 床速度: {groundVelocity.x}, 適用前速度: {rb.linearVelocity.x}");
+    public void OnJump(InputAction.CallbackContext context)
+    {
+        if (context.started)
+        {
+            jumpPressed = true;
+            jumpHeld = true;
         }
-
-        // 前フレーム適用分を相殺
-        rb.linearVelocity -= new Vector2(appliedGroundVelocityX, 0f);
-
-        // 新しい床速度を適用（水平＋垂直両方）
-        // 左右の速度差を防ぐため、床速度を直接加算
-        rb.linearVelocity += groundVelocity;
-
-        appliedGroundVelocityX = groundVelocity.x;
-        
-        // デバッグ用：適用後の速度確認
-        if (Mathf.Abs(groundVelocity.x) > 0.01f){
-            Debug.Log($"Check 212 - 動く床適用後 - 最終速度: {rb.linearVelocity.x}");
+        else if (context.canceled)
+        {
+            jumpHeld = false;
+            // ジャンプボタンを離した時の即座の減速（より自然に）
+            if (velocity.y > 0f && !jumpCutApplied)
+            {
+                velocity.y *= jumpCutMultiplier;
+                jumpCutApplied = true;
+            }
         }
     }
-    private IEnumerator DropThroughPlatform(){
+
+    private IEnumerator DropThroughPlatform()
+    {
         isDropping = true;
-
-        if (groundCheck == null){
-            yield return new WaitForSeconds(dropThroughTime);
-            isDropping = false;
-            yield break;
-        }
-
         Collider2D hit = Physics2D.OverlapCircle(groundCheck.transform.position, groundCheck.checkRadius, groundCheck.groundLayer);
 
-        if (hit != null){
-            PlatformType platformType = hit.GetComponentInParent<PlatformType>();
+        if (hit != null)
+        {
             PlatformEffector2D eff = hit.GetComponentInParent<PlatformEffector2D>();
-
-            if (platformType != null && platformType.allowDropThrough && eff != null){
-                float originalOffset = eff.rotationalOffset;
+            if (eff != null)
+            {
+                float orig = eff.rotationalOffset;
                 eff.rotationalOffset = 180f;
                 yield return new WaitForSeconds(dropThroughTime);
-                eff.rotationalOffset = originalOffset;
+                eff.rotationalOffset = orig;
             }
         }
 
@@ -537,44 +526,12 @@ public class PlayerController : MonoBehaviour{
         isDropping = false;
     }
 
-    // 旧：複雑な物理跳ね返り抑制は撤廃し安定重視（必要なら後で再導入）
-    private void PreventUnintendedJump(){
-        // Intentionally left minimal to avoid cutting valid jumps.
-    }
-
-    // シンプルな坂道移行制御
-    private void UpdateSlopeTransition(){
-        if (slopeTransitionBuffer > 0f){
-            slopeTransitionBuffer -= Time.deltaTime;
-            if (slopeTransitionBuffer <= 0f){
-                slopeTransitionBuffer = 0f;
-                Debug.Log("坂道移行バッファ終了");
-            }
-        }
-    }
-    private void LateUpdate(){
-        if (groundCheck != null && groundCheck.IsGrounded){
-            MoveObject lift = groundCheck.GetCurrentGroundMoveObject();
-
-            if (lift != null){
-                // Rigidbody2D.MovePositionで動くLiftの速度を取得してプレイヤーにも加算
-                Vector2 liftVel = lift.GetVelocity();
-
-                // Y方向は地面に押し付けないように制限
-                rb.linearVelocity = new Vector2(rb.linearVelocity.x + liftVel.x, rb.linearVelocity.y);
-                lastLiftVelocity = liftVel;
-                return;
-            }
-        }
-
-        // リフトから離れたら速度補正解除
-        lastLiftVelocity = Vector2.zero;
-    }
-
-    void OnDrawGizmosSelected(){
+    public int GetHP() { return hp; }
+    public int GetSP() { return sp; }
+    void OnDrawGizmosSelected()
+    {
         if (groundCheck == null) return;
         Gizmos.color = isGrounded ? Color.green : Color.red;
         Gizmos.DrawWireSphere(groundCheck.transform.position, groundCheck.checkRadius);
-        Gizmos.DrawLine(groundCheck.transform.position, groundCheck.transform.position + (Vector3)(-groundCheck.GroundNormal * 0.5f));
     }
 }

@@ -255,6 +255,7 @@ MonoBehaviour:
     m_Bits: 20736
   checkPoint: {fileID: 3767933829558806700}
   checkRadius: 0.3
+  liftPushIgnoreThreshold: 0.5
 --- !u!1 &9125102980391096417
 GameObject:
   m_ObjectHideFlags: 0
@@ -265,9 +266,9 @@ GameObject:
   m_Component:
   - component: {fileID: 462057023897668116}
   - component: {fileID: 3362155138497218852}
+  - component: {fileID: 8704705484768810977}
   - component: {fileID: 4553512148041190260}
   - component: {fileID: 4078534718860614441}
-  - component: {fileID: 8418731901948988810}
   - component: {fileID: 894266913406812210}
   - component: {fileID: 6139730529166128147}
   m_Layer: 3
@@ -352,6 +353,50 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &8704705484768810977
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9125102980391096417}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e055e2aa78bfd24993db51e235445c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerController
+  moveSpeed: 7
+  jumpForce: 13
+  gravity: -50
+  hp: 10
+  sp: 6
+  maxHP: 10
+  maxSP: 6
+  airControlFactor: 0.9
+  jumpCutMultiplier: 0.4
+  maxFallSpeed: -25
+  groundFriction: 0.8
+  airFriction: 0.98
+  groundAcceleration: 100
+  groundDeceleration: 100
+  airAcceleration: 140
+  airDeceleration: 80
+  forceAirStrafe: 1
+  minAirStrafeSpeed: 1.5
+  swordHandler: {fileID: 8497053089012765622}
+  weaponBase: {fileID: 1509482664476697413}
+  playerBulletPrefab: {fileID: 2649944767155283731, guid: f5751807d56bfb248b9a198e4b0ba40e, type: 3}
+  firePoint: {fileID: 462057023897668116}
+  specialCost: 1
+  attackGroundDuration: 0.3
+  attackAirDuration: 0.6
+  groundCheck: {fileID: 6823880510347196788}
+  dropThroughTime: 0.3
+  animator: {fileID: 6139730529166128147}
+  spriteRenderer: {fileID: 3362155138497218852}
+  hitEffectSpawner: {fileID: 1013685082542145824, guid: efda86670dc94e747a1371da620c0ec7, type: 3}
+  damageTime: 3
+  flashTime: 0.34
 --- !u!50 &4553512148041190260
 Rigidbody2D:
   serializedVersion: 5
@@ -367,7 +412,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDamping: 0
   m_AngularDamping: 0
-  m_GravityScale: 2
+  m_GravityScale: 0
   m_Material: {fileID: 6200000, guid: a8a34461126416e43a32639ed91f142e, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
@@ -416,42 +461,6 @@ CapsuleCollider2D:
   m_Offset: {x: -0.015628815, y: 0.012155712}
   m_Size: {x: 0.78814507, y: 0.9756886}
   m_Direction: 0
---- !u!114 &8418731901948988810
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9125102980391096417}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 51e940012724eea4182d0fcffeb0c36a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerControllerNew
-  moveSpeed: 6
-  jumpForce: 12
-  hp: 10
-  maxHP: 10
-  sp: 6
-  maxSP: 6
-  damageTime: 6
-  flashTime: 0.05
-  dropThroughTime: 0.3
-  swordHandler: {fileID: 8497053089012765622}
-  weaponBase: {fileID: 1509482664476697413}
-  playerBulletPrefab: {fileID: 2649944767155283731, guid: f5751807d56bfb248b9a198e4b0ba40e, type: 3}
-  firePoint: {fileID: 462057023897668116}
-  specialCost: 1
-  hitEffectSpawner: {fileID: 1013685082542145824, guid: efda86670dc94e747a1371da620c0ec7, type: 3}
-  groundCheck: {fileID: 6823880510347196788}
-  groundCheckRadius: 0.3
-  groundLayer:
-    serializedVersion: 2
-    m_Bits: 20736
-  airControlFactor: 0.8
-  slopeAcceptAngle: 50
-  slopeTransitionSpeed: 0.1
-  angleHysteresis: 5
 --- !u!114 &894266913406812210
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -479,7 +488,7 @@ MonoBehaviour:
   m_ActionEvents:
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 8418731901948988810}
+      - m_Target: {fileID: 8704705484768810977}
         m_TargetAssemblyTypeName: PlayerController, Assembly-CSharp
         m_MethodName: OnMove
         m_Mode: 0
@@ -495,7 +504,7 @@ MonoBehaviour:
     m_ActionName: 'Player/Move[/Keyboard/leftArrow,/Keyboard/downArrow,/Keyboard/rightArrow]'
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 8418731901948988810}
+      - m_Target: {fileID: 8704705484768810977}
         m_TargetAssemblyTypeName: PlayerController, Assembly-CSharp
         m_MethodName: OnJump
         m_Mode: 0
@@ -511,7 +520,7 @@ MonoBehaviour:
     m_ActionName: 'Player/Jump[/Keyboard/space]'
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 8418731901948988810}
+      - m_Target: {fileID: 8704705484768810977}
         m_TargetAssemblyTypeName: PlayerController, Assembly-CSharp
         m_MethodName: OnAttack
         m_Mode: 0
@@ -527,7 +536,7 @@ MonoBehaviour:
     m_ActionName: 'Player/Attack[/Keyboard/z]'
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 8418731901948988810}
+      - m_Target: {fileID: 8704705484768810977}
         m_TargetAssemblyTypeName: PlayerController, Assembly-CSharp
         m_MethodName: OnSpecialA
         m_Mode: 0

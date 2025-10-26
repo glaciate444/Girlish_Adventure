@@ -27,11 +27,12 @@ public class UIManager : MonoBehaviour {
         // 起動時のUI初期化
         if (CoinManager.Instance != null)
             UpdateCoinUI(CoinManager.Instance.GetTotalCoins());
-
+        
         var player = FindAnyObjectByType<PlayerController>();
         if (player != null)
             UpdateHP(player.hp, player.maxHP);
             UpdateSP(player.sp, player.maxSP);
+        
     }
 
     private void OnEnable() => AssignCamera();

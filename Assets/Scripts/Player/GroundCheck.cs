@@ -11,8 +11,7 @@ using UnityEngine;
 ///   3) どれもなければ Vector2.zero
 /// - nullチェックを厳密化してコンパイル安全性を確保
 ///
-public class GroundCheck : MonoBehaviour
-{
+public class GroundCheck : MonoBehaviour{
     [Header("地面判定レイヤー")]
     public LayerMask groundLayer;
     [Header("接地判定用トランスフォーム")]
@@ -28,10 +27,9 @@ public class GroundCheck : MonoBehaviour
     private Collider2D currentGroundCollider;
     private Vector2 smoothedNormal = Vector2.up;
 
-    private void Update()
-    {
-        if (checkPoint == null)
-        {
+    [SerializeField] private float liftPushIgnoreThreshold = 0.5f; // 上昇速度閾値
+    private void Update(){
+        if (checkPoint == null){
             IsGrounded = false;
             currentGroundCollider = null;
             GroundNormal = Vector2.up;
@@ -41,24 +39,20 @@ public class GroundCheck : MonoBehaviour
         Collider2D hit = Physics2D.OverlapCircle(checkPoint.position, checkRadius, groundLayer);
         IsGrounded = hit != null;
 
-        if (hit == null)
-        {
+        if (hit == null){
             Collider2D effectorHit = Physics2D.OverlapCircle(checkPoint.position, checkRadius, LayerMask.GetMask("Platform"));
-            if (effectorHit != null)
-            {
+            if (effectorHit != null){
                 hit = effectorHit;
             }
         }
 
-        if (hit != null)
-        {
+        if (hit != null){
             currentGroundCollider = hit;
             Vector2 averageNormal = GetStableGroundNormal();
             
             // 法線の急激な変化を防ぐ（より厳格に制限）
             float angleDiff = Vector2.Angle(smoothedNormal, averageNormal);
-            if (angleDiff > 30f) // 30度以上の急激な変化を制限（より厳格に）
-            {
+            if (angleDiff > 30f){ // 30度以上の急激な変化を制限（より厳格に）
                 float lerpFactor = 30f / angleDiff;
                 averageNormal = Vector2.Lerp(smoothedNormal, averageNormal, lerpFactor).normalized;
             }
@@ -66,24 +60,20 @@ public class GroundCheck : MonoBehaviour
             // さらに滑らかな法線変化
             smoothedNormal = Vector2.Lerp(smoothedNormal, averageNormal, 0.1f).normalized;
             GroundNormal = smoothedNormal;
-        }
-        else
-        {
+        }else{
             currentGroundCollider = null;
             smoothedNormal = Vector2.up;
             GroundNormal = Vector2.up;
         }
 
-        if (IsGrounded != prevGrounded)
-        {
+        if (IsGrounded != prevGrounded){
             OnGroundedChanged?.Invoke(IsGrounded);
             prevGrounded = IsGrounded;
         }
     }
 
     // 複数レイで安定した法線を取得
-    private Vector2 GetStableGroundNormal()
-    {
+    private Vector2 GetStableGroundNormal(){
         if (checkPoint == null) return Vector2.up;
 
         Vector2 centerPos = (Vector2)checkPoint.position;
@@ -98,24 +88,20 @@ public class GroundCheck : MonoBehaviour
             centerPos + Vector2.right * 0.2f
         };
 
-        foreach (Vector2 pos in rayPositions)
-        {
+        foreach (Vector2 pos in rayPositions){
             RaycastHit2D rayHit = Physics2D.Raycast(pos, Vector2.down, 0.4f, groundLayer);
-            if (rayHit.collider != null)
-            {
+            if (rayHit.collider != null){
                 totalNormal += rayHit.normal;
                 validHits++;
             }
         }
 
-        if (validHits > 0)
-        {
+        if (validHits > 0){
             Vector2 newNormal = (totalNormal / validHits).normalized;
 
             // 前フレームの法線との急変を緩和
             float angleDiff = Vector2.Angle(GroundNormal, newNormal);
-            if (angleDiff > 30f)
-            {
+            if (angleDiff > 30f){
                 float lerpFactor = 30f / angleDiff;
                 newNormal = Vector2.Lerp(GroundNormal, newNormal, lerpFactor).normalized;
             }
@@ -135,8 +121,7 @@ public class GroundCheck : MonoBehaviour
 
         // まず MoveObject（ユーザー実装の動く床）があればそちらの速度を優先
         var moveObj = currentGroundCollider.GetComponentInParent<MoveObject>();
-        if (moveObj != null)
-        {
+        if (moveObj != null){
             try{
                 return moveObj.GetVelocity();
             }catch{
@@ -170,7 +155,23 @@ public class GroundCheck : MonoBehaviour
         if (currentGroundCollider == null) return null;
         return currentGroundCollider.GetComponentInParent<MoveObject>();
     }
+    public bool IsGroundedSafe(){
+        if (!IsGrounded) return false;
 
+        // 接地中のオブジェクトが MoveObject（リフト）の場合
+        var lift = currentGroundCollider != null
+            ? currentGroundCollider.GetComponentInParent<MoveObject>()
+            : null;
+
+        if (lift != null){
+            Vector2 liftVel = lift.GetVelocity();
+            // 上昇が一定以上なら「接地扱いを一時的に解除」
+            if (liftVel.y > liftPushIgnoreThreshold)
+                return false;
+        }
+
+        return true;
+    }
 
     private void OnDrawGizmosSelected()
     {
