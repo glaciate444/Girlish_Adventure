@@ -2,7 +2,7 @@ using UnityEngine;
 
 [CreateAssetMenu(menuName = "Enemy/MoveBehavior/Jump")]
 public class Move_Jump : MoveBehaviorSO{
-    [Header("ƒWƒƒƒ“ƒvİ’è")]
+    [Header("ã‚¸ãƒ£ãƒ³ãƒ—è¨­å®š")]
     [SerializeField] private float jumpInterval = 2f;
     [SerializeField] private float jumpForce = 10f;
     [SerializeField] private float forwardSpeed = 3f;
@@ -16,20 +16,36 @@ public class Move_Jump : MoveBehaviorSO{
         Vector2 dir = enemy.MoveDirection;
         Vector2 pos = enemy.transform.position;
 
-        bool isGrounded = Physics2D.Raycast(
-            pos + Vector2.down * groundCheckOffset,
-            Vector2.down, 0.1f, groundLayer);
+        bool isGrounded;
+        Collider2D col = enemy.GetComponent<Collider2D>();
+        if (col != null){
+            int mask = (groundLayer.value == 0) ? Physics2D.AllLayers : groundLayer.value;
+            isGrounded = col.IsTouchingLayers(mask);
+
+            // è¶³å…ƒï¼ˆbounds.minï¼‰ã‹ã‚‰çŸ­è·é›¢ãƒ¬ã‚¤ã§ã‚‚ç¢ºèªï¼ˆä¿é™ºï¼‰
+            Vector2 footOrigin = new Vector2(col.bounds.center.x, col.bounds.min.y + 0.02f);
+            int rayMask = (groundLayer.value == 0) ? Physics2D.DefaultRaycastLayers : groundLayer.value;
+            var hit = Physics2D.Raycast(footOrigin, Vector2.down, 0.05f, rayMask);
+            Debug.DrawRay(footOrigin, Vector2.down * 0.05f, hit ? Color.green : Color.red);
+            if (!isGrounded) isGrounded = hit.collider != null;
+        }else{
+            // ã‚³ãƒ©ã‚¤ãƒ€ãƒ¼ãŒç„¡ã„å ´åˆã®ãƒ•ã‚©ãƒ¼ãƒ«ãƒãƒƒã‚¯ï¼šTransformåŸºæº–ã§ä¸‹å‘ããƒ¬ã‚¤
+            Vector2 origin = pos + Vector2.down * groundCheckOffset;
+            int rayMask = (groundLayer.value == 0) ? Physics2D.DefaultRaycastLayers : groundLayer.value;
+            isGrounded = Physics2D.Raycast(origin, Vector2.down, 0.2f, rayMask);
+            Debug.DrawRay(origin, Vector2.down * 0.2f, isGrounded ? Color.green : Color.red);
+        }
 
         state.timer += Time.deltaTime;
 
-        // ===== ƒWƒƒƒ“ƒvğŒ =====
+        // ===== ã‚¸ãƒ£ãƒ³ãƒ—æ¡ä»¶ =====
         if (isGrounded && !wasGrounded){
-            // ’…’n‚µ‚½uŠÔ‚Éƒ^ƒCƒ}[ƒŠƒZƒbƒg
+            // ç€åœ°ã—ãŸç¬é–“ã«ã‚¿ã‚¤ãƒãƒ¼ãƒªã‚»ãƒƒãƒˆ
             state.timer = 0;
         }
 
         if (isGrounded && state.timer >= jumpInterval){
-            // ƒWƒƒƒ“ƒv”­“®
+            // ã‚¸ãƒ£ãƒ³ãƒ—ç™ºå‹•
             Vector2 newVelocity = new Vector2(
                 dir.x * forwardSpeed,
                 jumpForce);
@@ -37,7 +53,7 @@ public class Move_Jump : MoveBehaviorSO{
             rb.linearVelocity = newVelocity;
             state.timer = 0;
         }else{
-            // ‹ó’†’†‚à‰¡•ûŒü‚ğˆÛiAddForce•s—vj
+            // ç©ºä¸­ä¸­ã‚‚æ¨ªæ–¹å‘ã‚’ç¶­æŒï¼ˆAddForceä¸è¦ï¼‰
             rb.linearVelocity = new Vector2(
                 dir.x * forwardSpeed,
                 rb.linearVelocity.y);

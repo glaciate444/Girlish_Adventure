@@ -118,8 +118,10 @@ public class PlayerController : MonoBehaviour{
     }
 
     private void UpdateGroundState(){
-        isGrounded = groundCheck != null ? groundCheck.IsGrounded :
+        bool groundedNow = groundCheck != null ? groundCheck.IsGrounded :
             Physics2D.Raycast(transform.position, Vector2.down, 0.1f, LayerMask.GetMask("Ground"));
+        // ドロップ中は強制的に非接地扱いにする（重力を有効にして下に抜ける）
+        isGrounded = isDropping ? false : groundedNow;
 
         animator?.SetBool("IsGrounded", isGrounded);
     }
@@ -418,8 +420,11 @@ public class PlayerController : MonoBehaviour{
     public void OnMove(InputAction.CallbackContext context){
         moveInput = context.ReadValue<Vector2>();
 
-        if (moveInput.y < -0.5f && isGrounded && !isDropping)
+        Debug.Log($"moveInput.y -> {moveInput.y} | isGrounded -> {isGrounded} | isDropping -> {isDropping}");
+        if (moveInput.y < -0.5f && isGrounded && !isDropping){
+            Debug.Log("床抜けok");
             StartCoroutine(DropThroughPlatform());
+        }
     }
 
     public void OnJump(InputAction.CallbackContext context){
@@ -438,9 +443,20 @@ public class PlayerController : MonoBehaviour{
 
     private IEnumerator DropThroughPlatform(){
         isDropping = true;
+        // 直ちに非接地扱いにして下方向の初速を与える
+        isGrounded = false;
+        if (velocity.y > -2f) velocity.y = -2f;
+
         Collider2D hit = Physics2D.OverlapCircle(groundCheck.transform.position, groundCheck.checkRadius, groundCheck.groundLayer);
 
         if (hit != null){
+            // この床がプレイヤーの下抜けを許可しているか確認
+            PlatformType platformType = hit.GetComponentInParent<PlatformType>();
+            if (platformType == null || !platformType.allowDropThrough){
+                isDropping = false;
+                yield break;
+            }
+
             PlatformEffector2D eff = hit.GetComponentInParent<PlatformEffector2D>();
             if (eff != null){
                 float orig = eff.rotationalOffset;

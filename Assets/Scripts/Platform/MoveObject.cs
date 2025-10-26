@@ -20,8 +20,7 @@ public class MoveObject : MonoBehaviour{
         return myVelocity;
     }
 
-    private void FixedUpdate()
-    {
+    private void FixedUpdate(){
         if (movePoint == null || movePoint.Length <= 1) return;
 
         Vector2 targetPos = returnPoint
@@ -31,16 +30,12 @@ public class MoveObject : MonoBehaviour{
         transform.position = Vector2.MoveTowards(transform.position, targetPos, speed * Time.deltaTime);
 
         // 到達判定
-        if (Vector2.Distance(transform.position, targetPos) <= 0.05f)
-        {
-            if (!returnPoint)
-            {
+        if (Vector2.Distance(transform.position, targetPos) <= 0.05f){
+            if (!returnPoint){
                 nowPoint++;
                 if (nowPoint + 1 >= movePoint.Length)
                     returnPoint = true;
-            }
-            else
-            {
+            }else{
                 nowPoint--;
                 if (nowPoint <= 0)
                     returnPoint = false;
