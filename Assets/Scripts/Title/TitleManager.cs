@@ -4,14 +4,25 @@
  * Date : 2025/10/24
  * Version : 0.01
  * ======================================= */
+// TitleManager.cs
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using UnityEngine.InputSystem;
 
 public class TitleManager : MonoBehaviour{
+    [SerializeField] private TitleMenuFadeController fadeController;
+    [SerializeField] private InputActionReference anyKeyAction;
 
-
-    private void Start(){
-        
+    private void OnEnable(){
+        anyKeyAction.action.performed += OnAnyKey;
+        anyKeyAction.action.Enable();
     }
 
+    private void OnDisable(){
+        anyKeyAction.action.performed -= OnAnyKey;
+        anyKeyAction.action.Disable();
+    }
+
+    private void OnAnyKey(InputAction.CallbackContext ctx){
+        fadeController.OpenMenu();
+    }
 }
