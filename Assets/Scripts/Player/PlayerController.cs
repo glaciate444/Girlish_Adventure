@@ -1,4 +1,12 @@
-﻿using System.Collections;
+﻿/* =======================================
+ * ファイル名 : PlayerController.cs
+ * 概要 : プレイヤースクリプト
+ * Created Date : 2025/10/01
+ * Date : 2025/10/24
+ * Version : 0.04
+ * 更新内容 : AddForce除外
+ * ======================================= */
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 

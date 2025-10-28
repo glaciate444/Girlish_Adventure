@@ -1,10 +1,10 @@
 ﻿/* =======================================
  * ファイル名 : TitleManager.cs
  * 概要 : タイトル画面スクリプト
- * Date : 2025/10/24
- * Version : 0.01
+ * Created Date : 2025/10/24
+ * Date : 2025/10/28
+ * Version : 0.02
  * ======================================= */
-// TitleManager.cs
 using UnityEngine;
 using UnityEngine.InputSystem;
 using DG.Tweening;
