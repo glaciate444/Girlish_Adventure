@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using DG.Tweening;
 using UnityEngine.EventSystems;
 
-public class GameStartPanelController : MonoBehaviour {
+public class GameStartPanelController : MonoBehaviour{
     [Header("Groups")]
     [SerializeField] private CanvasGroup slotGroup;      // セーブスロット一覧
     [SerializeField] private CanvasGroup confirmGroup;   // 確認ウィンドウ
@@ -14,6 +14,11 @@ public class GameStartPanelController : MonoBehaviour {
     [SerializeField] private Button firstConfirmButton;
     [SerializeField] private Button cancelConfirmButton;
 
+    // 🔽 ここを追加
+    [Header("Back")]
+    [SerializeField] private Button backButton;                          // ← GameStartPanel内のBackボタン
+    [SerializeField] private TitleMenuTweenController menuController;    // ← TitleManagerをドラッグ設定
+
     private CanvasGroup currentGroup;
 
     private void Start(){
@@ -21,11 +26,28 @@ public class GameStartPanelController : MonoBehaviour {
         InitGroup(confirmGroup, false);
 
         currentGroup = slotGroup;
+    }
 
-        // 確認ウィンドウのキャンセルボタン
+    // 🔽 ここを新しく追加
+    private void OnEnable(){
+        // CancelConfirm は必ず confirm の "No" ボタンを割り当てる（Back と混同しない）
         if (cancelConfirmButton != null){
-            cancelConfirmButton.onClick.RemoveAllListeners();
-            cancelConfirmButton.onClick.AddListener(CloseConfirm);
+            if (cancelConfirmButton == backButton){
+                Debug.LogError("[GameStartPanelController] cancelConfirmButton is BackButton. Assign the NO button in confirm dialog.");
+                // Back の動作は維持したいので、ここではリスナーを消さない
+            }else{
+                cancelConfirmButton.onClick.RemoveAllListeners();
+                cancelConfirmButton.onClick.AddListener(CloseConfirm);
+            }
+        }
+
+        // GameStartPanel がアクティブになった瞬間に BackButton 登録（最終的に必ず上書き保証）
+        if (backButton != null && menuController != null){
+            backButton.onClick.RemoveAllListeners();
+            backButton.onClick.AddListener(menuController.SwitchToMenu);
+            Debug.Log("[GameStartPanelController] BackButton listener set (OnEnable)");
+        }else{
+            Debug.LogWarning("[GameStartPanelController] BackButton or MenuController not assigned!");
         }
     }
 
@@ -57,6 +79,7 @@ public class GameStartPanelController : MonoBehaviour {
 
     public void CloseConfirm(){
         if (confirmGroup == null || slotGroup == null) return;
+        if (!confirmGroup.gameObject.activeSelf) return; // 非表示なら何もしない（Backと干渉防止）
 
         Sequence seq = DOTween.Sequence();
         seq.Join(confirmGroup.DOFade(0f, fadeDuration))
