@@ -6,6 +6,8 @@
  * Version : 0.01
  * 更新内容 : 
  * 備考：DoTween必須
+ * TitleMenuTweenController = 遷移司令塔
+ * GameStartPanelController / OptionPanelController = 部隊リーダー（各UI制御）
  * ======================================= */
 using UnityEngine;
 using DG.Tweening;
