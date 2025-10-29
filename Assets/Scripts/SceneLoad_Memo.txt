@@ -1,0 +1,24 @@
+// ---------------------------------
+// 遷移メモ
+// 
+// ---------------------------------
+3️⃣ Title から WorldMap・Stage に遷移
+Title シーンのボタンに紐づけ：
+public void OnStartGame(){
+    GameManager.Instance.LoadStage(1); // ステージ1をロード
+}
+// ---------------------------------
+4️⃣ ステージ内でゴールに到達したとき
+private void OnTriggerEnter2D(Collider2D other){
+    if (other.CompareTag("Player")){
+        Debug.Log("Goal!");
+        GameManager.Instance.ReturnToWorldMap();
+    }
+}
+// ---------------------------------
+5️⃣ WorldMap で別のステージを選択
+public void SelectStage(int stageNumber){
+    GameManager.Instance.LoadStage(stageNumber);
+}
+// ---------------------------------
+

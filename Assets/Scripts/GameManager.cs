@@ -9,55 +9,60 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour {
     public static GameManager Instance { get; private set; }
-    [SerializeField] private GameObject uiPrefab;
-    public enum GameState { Playing, Cleared, GameOver }
-    public GameState CurrentState { get; private set; }
 
+    private UIManager uiManager;
+    public int CurrentStage { get; private set; }
+
+    [SerializeField] private SoundManager soundManager; // InspectorでPersistent上のSoundManager参照
+    public SoundManager Sound => soundManager;
+    public UIManager UI => uiManager;
     private void Awake(){
-        if (Instance == null){
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-
-            if (UIManager.Instance == null && uiPrefab != null){
-                var ui = Instantiate(uiPrefab);
-                DontDestroyOnLoad(ui);
-            }
-        }else{
+        if (Instance != null){
             Destroy(gameObject);
+            return;
         }
+
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
-    private void Start(){
-        SetState(GameState.Playing);
+    public void RegisterUI(UIManager ui){
+        uiManager = ui;
     }
 
-    public void SetState(GameState state){
-        CurrentState = state;
-        Debug.Log($"GameState: {state}");
-
-        switch (state){
-            case GameState.Playing:
-                Time.timeScale = 1f;
-                break;
-            case GameState.Cleared:
-                Time.timeScale = 0f;
-                UIManager.Instance?.ShowClearUI();
-                break;
-            case GameState.GameOver:
-                Time.timeScale = 0f;
-                // UIManager.Instance?.ShowGameOverUI();
-                break;
-        }
+    public void UnregisterUI(){
+        uiManager = null;
     }
 
-    public void RetryStage(){
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    // ===== シーン遷移 =====
+
+    public void LoadStage(int stageNumber){
+        CurrentStage = stageNumber;
+        SceneManager.LoadSceneAsync($"Stage_{stageNumber}");
     }
 
-    public void GoToNextStage()
-    {
-        int nextIndex = SceneManager.GetActiveScene().buildIndex + 1;
-        SceneManager.LoadScene(nextIndex);
+    public void ReturnToWorldMap(){
+        SceneManager.LoadSceneAsync("WorldMap");
+    }
+
+    public void GoToTitle(){
+        SceneManager.LoadSceneAsync("Title");
+    }
+
+    // ===== サウンド操作 =====
+
+    public void PlayBGM(int bgmID){
+        if (soundManager != null)
+            soundManager.PlayBGM(bgmID);
+        else
+            Debug.LogWarning("SoundManager が未設定です。Persistent シーンに配置してください。");
+    }
+
+    public void StopBGM(){
+        soundManager?.StopBGM();
+    }
+
+    public void PlaySE(int seID){
+        soundManager?.PlaySE(seID);
     }
 }

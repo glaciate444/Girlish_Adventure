@@ -15,9 +15,9 @@ public class CoinManager : MonoBehaviour {
         totalCoins += amount;
         Debug.Log($"コインを{amount}枚取得、合計{totalCoins}枚");
 
-        // UI更新
-        if (UIManager.Instance != null)
-            UIManager.Instance.UpdateCoinUI(totalCoins);
+        var ui = GameManager.Instance?.UI;
+        if (ui != null)
+            ui.UpdateCoinUI(totalCoins);
         else
             Debug.LogWarning("UIManagerが存在しないためUI更新できません。");
     }

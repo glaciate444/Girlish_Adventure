@@ -392,27 +392,28 @@ public class PlayerController : MonoBehaviour{
     }
 
     // ===================== ステータス制御 =====================
+    // 現在コンパイルエラーCS0117とCS1061が多発したため停止
     public void TakeDamage(int dmg){
         if (isInvincible) return;
         hp = Mathf.Clamp(hp - dmg, 0, maxHP);
-        UIManager.Instance?.UpdateHP(hp, maxHP);
+        GameManager.Instance?.UI?.UpdateHP(hp, maxHP);
         OnDamage?.Invoke();
         if (hp <= 0) Die();
     }
 
     public void HealHP(int amount){
         hp = Mathf.Clamp(hp + amount, 0, maxHP);
-        UIManager.Instance?.UpdateHP(hp, maxHP);
+        GameManager.Instance?.UI?.UpdateHP(hp, maxHP);
     }
 
     public void UseSpecial(int cost){
         sp = Mathf.Clamp(sp - cost, 0, maxSP);
-        UIManager.Instance?.UpdateSP(sp, maxSP);
+        GameManager.Instance?.UI?.UpdateSP(sp, maxSP);
     }
 
     public void HealSP(int amount){
         sp = Mathf.Clamp(sp + amount, 0, maxSP);
-        UIManager.Instance?.UpdateSP(sp, maxSP);
+        GameManager.Instance?.UI?.UpdateSP(sp, maxSP);
     }
 
     private void Die(){
