@@ -1,10 +1,10 @@
 /* =======================================
- * �t�@�C���� : JumpPad.cs
- * �T�v : �W�����v��X�N���v�g
+ * ファイル名 : JumpPad.cs
+ * 概要 : ジャンプ台スクリプト
  * Created Date : 2025/10/31
  * Date : 2025/10/31
- * Version : 0.01
- * �X�V���e : �V�K�쐬
+ * Version : 0.02
+ * 更新内容 : 横移動を可能に
  * ======================================= */
 using UnityEngine;
 using System.Collections;
