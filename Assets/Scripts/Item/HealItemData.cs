@@ -1,3 +1,12 @@
+﻿/* =======================================
+ * ファイル名 : HealItemData.cs (ScriptableObject型)
+ * 概要 : 回復スクリプト
+ * Created Date : 2025/10/14
+ * Date : 2025/10/14
+ * Version : 0.01
+ * 更新内容 : 新規作成
+ * 補足 : ScriptableObject
+ * ======================================= */
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -7,7 +16,7 @@ public class HealEffect {
     public int amount;
 }
 
-public enum HealType { HP, SP } // �̂��Ɋg������
+public enum HealType { HP, SP } // のちに拡張する
 
 [CreateAssetMenu(menuName = "Items/Multi Heal Item")]
 public class HealItemData : ScriptableObject {

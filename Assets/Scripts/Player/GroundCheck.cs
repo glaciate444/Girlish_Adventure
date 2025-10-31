@@ -1,16 +1,20 @@
-﻿using System;
+﻿/* =======================================
+ * ファイル名 : GroundCheck.cs
+ * 概要 : 接地判定と地面法線の取得（リフト対応）スクリプト
+ * Created Date : 2025/10/01
+ * Date : 2025/10/21
+ * Version : 0.04
+ * 更新内容 : 
+ * 変更点（安定版）:
+ * - GetGroundVelocity() を強化:
+ *   1) 接地オブジェクトに MoveObject コンポーネントがあれば優先してその速度を返す
+ *   2) なければ attachedRigidbody の linearVelocity を返す（存在すれば）
+ *   3) どれもなければ Vector2.zero
+ * - nullチェックを厳密化してコンパイル安全性を確保
+ * ======================================= */
+using System;
 using UnityEngine;
 
-/// <summary>
-/// GroundCheck: 接地判定と地面法線の取得（リフト対応）
-///
-/// 変更点（安定版）:
-/// - GetGroundVelocity() を強化:
-///   1) 接地オブジェクトに MoveObject コンポーネントがあれば優先してその速度を返す
-///   2) なければ attachedRigidbody の linearVelocity を返す（存在すれば）
-///   3) どれもなければ Vector2.zero
-/// - nullチェックを厳密化してコンパイル安全性を確保
-///
 public class GroundCheck : MonoBehaviour{
     [Header("地面判定レイヤー")]
     public LayerMask groundLayer;

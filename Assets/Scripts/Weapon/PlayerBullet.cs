@@ -1,4 +1,13 @@
-﻿using UnityEngine;
+﻿/* =======================================
+ * ファイル名 : PlayerBullet.cs
+ * 概要 : プレイヤーの弾スクリプト
+ * 継承スクリプト : BaseBullet.cs
+ * Created Date : 2025/10/15
+ * Date : 2025/10/15
+ * Version : 0.01
+ * 更新内容 : 新規作成
+ * ======================================= */
+using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerBullet : BaseBullet {

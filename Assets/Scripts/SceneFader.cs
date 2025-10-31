@@ -1,3 +1,11 @@
+/* =======================================
+ * ファイル名 : SceneFader.cs
+ * 概要 : シーンのフェードスクリプト
+ * Created Date : 2025/10/29
+ * Date : 2025/10/29
+ * Version : 0.01
+ * 更新内容 : 新規作成
+ * ======================================= */
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;

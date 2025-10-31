@@ -11,6 +11,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Persistent.unity
     guid: 2959e32dd24794f43ae20cc20e9d6dc6
+  - enabled: 1
+    path: Assets/Scenes/Map/WorldMap.unity
+    guid: 40ec46fdf8484f646b0a1877ab7bcd6b
+  - enabled: 1
+    path: Assets/Scenes/TestStage.unity
+    guid: 98727d3d4c0080949b47e7a862a3b564
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

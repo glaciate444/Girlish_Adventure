@@ -65,6 +65,8 @@ public class PlayerController : MonoBehaviour{
     private bool isAirAttacking;
     private bool isDead;
     private bool isInvincible;
+    private bool isOnJumpPad; // ← ジャンプ台中フラグ
+    private float jumpPadTimer;
     private PlayerInput playerInput;
     public delegate void OnDamageDelegate();
     public event OnDamageDelegate OnDamage;
@@ -82,6 +84,24 @@ public class PlayerController : MonoBehaviour{
         if (!animator) animator = GetComponent<Animator>();
         if (!spriteRenderer) spriteRenderer = GetComponent<SpriteRenderer>();
         playerInput = GetComponent<PlayerInput>();
+    }
+
+    private void Start(){
+        // HP/SP を起動時に最大値で初期化
+        if (hp <= 0) hp = maxHP;
+        if (sp <= 0) sp = maxSP;
+
+        // UI がまだ未登録のことがあるため、登録を待ってから同期
+        StartCoroutine(InitialSyncUIRoutine());
+    }
+
+    private IEnumerator InitialSyncUIRoutine(){
+        // GameManager と UIManager の準備を待機
+        while (GameManager.Instance == null || GameManager.Instance.UI == null)
+            yield return null;
+
+        GameManager.Instance.UI.UpdateHP(hp, maxHP);
+        GameManager.Instance.UI.UpdateSP(sp, maxSP);
     }
 
     private void OnEnable(){
@@ -114,6 +134,12 @@ public class PlayerController : MonoBehaviour{
 
     private void FixedUpdate(){
         if (isDead) return;
+
+        if (isOnJumpPad){
+            jumpPadTimer -= Time.fixedDeltaTime;
+            if (jumpPadTimer <= 0f)
+                isOnJumpPad = false;
+        }
 
         UpdateGroundState();
         HandleMovement();
@@ -392,7 +418,6 @@ public class PlayerController : MonoBehaviour{
     }
 
     // ===================== ステータス制御 =====================
-    // 現在コンパイルエラーCS0117とCS1061が多発したため停止
     public void TakeDamage(int dmg){
         if (isInvincible) return;
         hp = Mathf.Clamp(hp - dmg, 0, maxHP);
@@ -478,6 +503,20 @@ public class PlayerController : MonoBehaviour{
 
     public int GetHP() { return hp; }
     public int GetSP() { return sp; }
+
+    // === JumpPad から呼ばれる ===
+    public void ActivateJumpPad(float bounceHeight, float duration){
+        if (isDead) return;
+
+        // バネ中フラグをセット（この間、重力は停止）
+        isOnJumpPad = true;
+        jumpPadTimer = duration;
+
+        // 通常の垂直速度を上書きして上向きへ
+        velocity.y = bounceHeight / duration * 2f; // 弾き具合を計算
+    }
+    public bool IsOnJumpPad => isOnJumpPad;
+
     void OnDrawGizmosSelected(){
         if (groundCheck == null) return;
         Gizmos.color = isGrounded ? Color.green : Color.red;

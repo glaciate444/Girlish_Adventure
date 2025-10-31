@@ -1,3 +1,11 @@
+/* =======================================
+ * ファイル名 : HealItem.cs
+ * 概要 : 回復アイテム取得スクリプト
+ * Created Date : 2025/10/14
+ * Date : 2025/10/14
+ * Version : 0.01
+ * 更新内容 : 新規作成
+ * ======================================= */
 using UnityEngine;
 
 public class HealItem : MonoBehaviour {

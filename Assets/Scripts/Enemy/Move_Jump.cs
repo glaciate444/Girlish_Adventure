@@ -1,3 +1,11 @@
+/* =======================================
+ * ファイル名 : Move_Jump.cs
+ * 概要 : ジャンプ型移動スクリプト
+ * Create Date : 2025/10/16
+ * Date : 2025/10/21
+ * Version : 0.02
+ * 更新内容 : 
+ * ======================================= */
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "Enemy/MoveBehavior/Jump")]

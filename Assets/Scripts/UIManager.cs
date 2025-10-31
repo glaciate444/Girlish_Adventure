@@ -1,11 +1,14 @@
 ﻿/* =======================================
  * ファイル名 : UIManager.cs
  * 概要 : UIManagerスクリプト
- * Date : 2025/10/10
+ * Created Date : 2025/10/10
+ * Date : 2025/10/31
  * Version : 0.02
+ * 更新内容 : プレハブ生成時の不具合修正
  * ======================================= */
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class UIManager : MonoBehaviour {
     [Header("UI References")]
@@ -15,26 +18,29 @@ public class UIManager : MonoBehaviour {
     [SerializeField] private SPBar spBar;
 
     private void Awake(){
+        // まず親（自分）から取得し、無ければ子を探索する
         if (canvas == null)
-            canvas = GetComponent<Canvas>();
+            canvas = GetComponent<Canvas>() ?? GetComponentInChildren<Canvas>(true);
+
+        if (coinText == null)
+            coinText = GetComponent<TextMeshProUGUI>() ?? GetComponentInChildren<TextMeshProUGUI>(true);
+        if (hpBar == null)
+            hpBar = GetComponent<HPBar>() ?? GetComponentInChildren<HPBar>(true);
+        if (spBar == null)
+            spBar = GetComponent<SPBar>() ?? GetComponentInChildren<SPBar>(true);
+
+        // シーンロードイベント登録
+        SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
     private void Start(){
         if (GameManager.Instance != null)
             GameManager.Instance.RegisterUI(this);
 
-        InitializeUI();
+        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
-
-    private void InitializeUI(){
-        if (CoinManager.Instance != null)
-            UpdateCoinUI(CoinManager.Instance.GetTotalCoins());
-
-        var player = FindAnyObjectByType<PlayerController>();
-        if (player != null){
-            UpdateHP(player.hp, player.maxHP);
-            UpdateSP(player.sp, player.maxSP);
-        }
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode){
+        AssignCamera();
     }
 
     private void OnEnable() => AssignCamera();

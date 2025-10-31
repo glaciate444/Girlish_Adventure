@@ -1,4 +1,13 @@
-﻿using UnityEngine;
+﻿/* =======================================
+ * ファイル名 : SwordWeapon.cs
+ * 概要 : ゲームメインスクリプト
+ * 継承 : WeaponBase
+ * Create Date : 2025/10/01
+ * Date : 2025/10/24
+ * Version : 0.04
+ * 更新内容 : Presistent対応
+ * ======================================= */
+using UnityEngine;
 using System.Collections;
 
 public class SwordWeapon : WeaponBase {

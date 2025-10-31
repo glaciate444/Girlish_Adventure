@@ -1,8 +1,10 @@
 /* =======================================
  * ファイル名 : GameManager.cs
  * 概要 : ゲームメインスクリプト
- * Date : 2025/10/21
- * Version : 0.01
+ * Create Date : 2025/10/01
+ * Date : 2025/10/24
+ * Version : 0.04
+ * 更新内容 : Presistent対応
  * ======================================= */
 using UnityEngine;
 using UnityEngine.SceneManagement;

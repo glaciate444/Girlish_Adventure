@@ -1,4 +1,12 @@
-﻿using UnityEngine;
+﻿/* =======================================
+ * ファイル名 : Move_FlySin.cs
+ * 概要 : 敵の飛行スクリプト
+ * Created Date : 2025/10/16
+ * Date : 2025/10/16
+ * Version : 0.01
+ * 更新内容 : 
+ * ======================================= */
+using UnityEngine;
 
 [CreateAssetMenu(menuName = "Enemy/MoveBehavior/FlySin")]
 public class Move_FlySin : MoveBehaviorSO {

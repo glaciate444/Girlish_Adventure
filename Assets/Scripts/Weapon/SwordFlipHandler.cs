@@ -1,3 +1,11 @@
+/* =======================================
+ * ファイル名 : SwordFlipHandler.cs
+ * 概要 : ソードの反転スクリプト
+ * Create Date : 2025/10/15
+ * Date : 2025/10/15
+ * Version : 0.01
+ * 更新内容 : 新規作成
+ * ======================================= */
 using UnityEngine;
 
 public class SwordFlipHandler : MonoBehaviour{
