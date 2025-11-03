@@ -1,10 +1,13 @@
 fileFormatVersion: 2
-guid: 122e56f015d606c43a9bceafd4d4d66d
+guid: 961733257b05b234bb803800135a61be
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -4369570045096677551
-    second: ladder_top_0
+      213: -3137250950957209926
+    second: frau_Ladder_0
+  - first:
+      213: -7353222987960711512
+    second: frau_Ladder_1
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -51,7 +54,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 64
+  spritePixelsToUnits: 24
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -110,19 +113,6 @@ TextureImporter:
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
-    buildTarget: tvOS
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    ignorePlatformSupport: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 4
     buildTarget: iOS
     maxTextureSize: 2048
     resizeAlgorithm: 0
@@ -139,23 +129,45 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: ladder_top_0
+      name: frau_Ladder_0
       rect:
         serializedVersion: 2
-        x: 0
+        x: 7
         y: 0
-        width: 64
-        height: 37
-      alignment: 2
-      pivot: {x: 0.5, y: 1}
+        width: 18
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 15f23d8e13b2c53c0800000000000000
-      internalID: -4369570045096677551
+      spriteID: ab660f8c1ee3674d0800000000000000
+      internalID: -3137250950957209926
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frau_Ladder_1
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 0
+        width: 18
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8a68d58c6aa14f990800000000000000
+      internalID: -7353222987960711512
       vertices: []
       indices: 
       edges: []
@@ -164,7 +176,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -174,7 +186,8 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      ladder_top_0: -4369570045096677551
+      frau_Ladder_0: -3137250950957209926
+      frau_Ladder_1: -7353222987960711512
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

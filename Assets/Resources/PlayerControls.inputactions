@@ -58,7 +58,7 @@
                 {
                     "name": "up",
                     "id": "987a8820-e1de-4dd8-ada2-86b5d37d6948",
-                    "path": "<Keyboard>/leftArrow",
+                    "path": "<Keyboard>/upArrow",
                     "interactions": "",
                     "processors": "",
                     "groups": "",

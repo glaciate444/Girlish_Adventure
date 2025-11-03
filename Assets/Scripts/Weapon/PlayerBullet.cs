@@ -12,8 +12,10 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerBullet : BaseBullet {
     [SerializeField] private float speed = 10f;
+    [SerializeField] private float ownerIgnoreTime = 0.05f; // 生成直後の自爆防止
     private Vector2 direction;
     private Rigidbody2D rb;
+    private Collider2D bulletCollider;
 
     private bool initialized = false;
 
@@ -23,9 +25,11 @@ public class PlayerBullet : BaseBullet {
         rb.gravityScale = 0; // 弾が落下しないように
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
         rb.freezeRotation = true;
+        bulletCollider = GetComponent<Collider2D>();
+        if (bulletCollider != null) bulletCollider.isTrigger = true; // 物理衝突で止まらないように
     }
 
-    public void Setup(Vector2 dir){
+    public void Setup(Vector2 dir, GameObject owner = null){
         direction = dir.normalized;
         targetTag = "Enemy";
         initialized = true;
@@ -36,6 +40,7 @@ public class PlayerBullet : BaseBullet {
 
         // Unity 6ではここで直接代入してもOK
         rb.linearVelocity = direction * speed;
+
     }
 
     private void FixedUpdate(){

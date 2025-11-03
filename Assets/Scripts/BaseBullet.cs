@@ -13,7 +13,7 @@ public abstract class BaseBullet : MonoBehaviour{
     [SerializeField] protected float lifeTime = 5f;
     [SerializeField] protected string targetTag = "Player"; // デフォルトは敵弾向け
     [SerializeField] protected GameObject hitAnimationPrefab;       // Spriteアニメ付き
-    
+
     protected virtual void Start(){
         Destroy(gameObject, lifeTime);
     }
@@ -23,7 +23,8 @@ public abstract class BaseBullet : MonoBehaviour{
             HitTarget(other);
             AnimeEffect();
             Destroy(gameObject);
-        }else if (other.CompareTag("Ground")){
+        }
+        else if (other.CompareTag("Ground")){
             AnimeEffect();
             Destroy(gameObject);
         }

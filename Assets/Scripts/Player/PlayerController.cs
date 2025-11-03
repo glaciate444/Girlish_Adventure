@@ -38,12 +38,17 @@ public class PlayerController : MonoBehaviour{
     [SerializeField] private WeaponBase weaponBase;
     [SerializeField] private GameObject playerBulletPrefab;
     [SerializeField] private Transform firePoint;
+    [SerializeField] private float bulletSpawnForwardOffset = 0.2f; // 地面との食い込み防止（前方）
+    [SerializeField] private float bulletSpawnUpOffsetGrounded = 0.06f; // 接地時に少しだけ上げる
     [SerializeField] private int specialCost = 1;
     [SerializeField] private float attackGroundDuration = 0.3f;
     [SerializeField] private float attackAirDuration = 0.6f;
     [Header("Ground Check")]
     [SerializeField] private GroundCheck groundCheck;
     [SerializeField] private float dropThroughTime = 0.3f;
+    [Header("梯子乗降速度")]
+    [SerializeField] private float climbSpeed = 4f;
+    [SerializeField] private float ladderMaxSnapWidth = 1.5f; // これより幅広い梯子コライダーではXスナップしない
     [Header("アニメーション / 無敵点滅")]
     [SerializeField] private Animator animator;
     [SerializeField] private SpriteRenderer spriteRenderer;
@@ -66,7 +71,15 @@ public class PlayerController : MonoBehaviour{
     private bool isDead;
     private bool isInvincible;
     private bool isOnJumpPad; // ← ジャンプ台中フラグ
+    private bool isClimbing;
     private float jumpPadTimer;
+    private bool isOnLadder = false;
+    private float horizontalHoldTimeLadder = 0f;
+    private const float horizontalReleaseFramesLadder = 30f;
+    // === 梯子関連補助 ===
+    private Collider2D currentLadderCollider; // 侵入中の梯子のコライダー
+    private float ladderSnapCenterX = 0f;      // スナップ用のX中心
+    private bool lockXOnLadder = false;        // 登り中にXを固定するか
     private PlayerInput playerInput;
     public delegate void OnDamageDelegate();
     public event OnDamageDelegate OnDamage;
@@ -127,6 +140,8 @@ public class PlayerController : MonoBehaviour{
     private void Update(){
         if (isDead) return;
 
+
+
 		// 入力・見た目更新のみ（物理はFixedUpdate）
 		LookMoveDirection();
         UpdateAnimation();
@@ -134,6 +149,11 @@ public class PlayerController : MonoBehaviour{
 
     private void FixedUpdate(){
         if (isDead) return;
+
+        if (isClimbing){
+            HandleClimb(); // 梯子移動
+            return;        // 通常物理処理をスキップ
+        }
 
         if (isOnJumpPad){
             jumpPadTimer -= Time.fixedDeltaTime;
@@ -277,6 +297,69 @@ public class PlayerController : MonoBehaviour{
         }
     }
 
+    private void HandleClimb(){
+        // 横入力監視
+        if (Mathf.Abs(moveInput.x) > 0.1f)
+            horizontalHoldTimeLadder++;
+        else
+            horizontalHoldTimeLadder = 0f;
+
+        // 横入力が30フレーム以上 or ジャンプで梯子解除
+        if (horizontalHoldTimeLadder >= horizontalReleaseFramesLadder || jumpPressed){
+            ExitLadder();
+            return;
+        }
+
+        // 上下移動のみ（Xは梯子の中心へ固定）
+        if (lockXOnLadder && currentLadderCollider != null){
+            // スナップした中心からズレないよう、毎フレーム位置を補正
+            Vector3 pos = transform.position;
+            pos.x = ladderSnapCenterX;
+            transform.position = pos;
+        }
+
+        velocity = new Vector2(0f, moveInput.y * climbSpeed);
+        rb.linearVelocity = velocity;
+        rb.gravityScale = 0f;
+
+        // アニメーション更新予定地
+        animator?.SetBool("isClimbing", Mathf.Abs(moveInput.y) > 0.1f);
+    }
+
+    private void EnterLadder(){
+        isClimbing = true;
+        rb.linearVelocity = Vector2.zero;
+        rb.gravityScale = 0f;
+        velocity = Vector2.zero;
+        // 侵入時のXスナップ（梯子が十分に細い場合のみ）
+        if (currentLadderCollider != null){
+            Bounds b = currentLadderCollider.bounds;
+            if (b.size.x <= ladderMaxSnapWidth){
+                ladderSnapCenterX = b.center.x;
+                Vector3 pos = transform.position;
+                pos.x = ladderSnapCenterX;
+                transform.position = pos;
+                lockXOnLadder = true;
+            }else{
+                // 幅広い（Tilemap等）梯子はスナップせず、現在位置を維持
+                ladderSnapCenterX = transform.position.x;
+                lockXOnLadder = false;
+            }
+        }else{
+            ladderSnapCenterX = transform.position.x;
+            lockXOnLadder = false;
+        }
+        animator?.SetBool("isClimbing", true); // ←これだけでOK
+    }
+
+    private void ExitLadder(){
+        isClimbing = false;
+        rb.gravityScale = 0f; // 元々0なので維持
+        horizontalHoldTimeLadder = 0f;
+        lockXOnLadder = false;
+        animator?.SetBool("isClimbing", false);
+    }
+
     private void UpdateFacing(){
         if (moveInput.x > 0.1f) facingRight = true;
         else if (moveInput.x < -0.1f) facingRight = false;
@@ -289,9 +372,31 @@ public class PlayerController : MonoBehaviour{
 
     private void UpdateAnimation(){
 		animator?.SetBool("Walk", Mathf.Abs(moveInput.x) > 0.1f);
-		// 攻撃中はJumpフラグを上書きしない（空中攻撃が吸い込まれるのを防止）
-		if (!isAttacking)
-			animator?.SetBool("Jump", !isGrounded);
+        // 攻撃中はJumpフラグを上書きしない（空中攻撃が吸い込まれるのを防止）
+        // 梯子中はJumpアニメを無効化する（地上判定に依存しない）
+        if (!isAttacking){
+            if (isClimbing){
+                animator?.SetBool("Jump", false);
+            }else{
+                animator?.SetBool("Jump", !isGrounded);
+            }
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision){
+        if (collision.CompareTag("Ladder")){
+            isOnLadder = true;
+            currentLadderCollider = collision; // 侵入した梯子を保持
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D collision){
+        if (collision.CompareTag("Ladder")){
+            isOnLadder = false;
+            ExitLadder();
+            if (currentLadderCollider == collision)
+                currentLadderCollider = null;
+        }
     }
 
     // ===================== 攻撃処理 =====================
@@ -370,11 +475,14 @@ public class PlayerController : MonoBehaviour{
     public void OnSpecialA(InputAction.CallbackContext context){
         if (!context.performed || sp < specialCost) return;
         UseSpecial(specialCost);
-        var bulletObj = Instantiate(playerBulletPrefab, firePoint.position, Quaternion.identity);
+        float forward = facingRight ? bulletSpawnForwardOffset : -bulletSpawnForwardOffset;
+        float up = isGrounded ? bulletSpawnUpOffsetGrounded : 0f;
+        Vector3 spawnPos = firePoint.position + new Vector3(forward, up, 0f);
+        var bulletObj = Instantiate(playerBulletPrefab, spawnPos, Quaternion.identity);
         var bullet = bulletObj.GetComponent<PlayerBullet>();
         if (bullet != null){
             Vector2 dir = facingRight ? Vector2.right : Vector2.left;
-            bullet.Setup(dir);
+            bullet.Setup(dir, this.gameObject);
         }
     }
 
@@ -455,6 +563,24 @@ public class PlayerController : MonoBehaviour{
         if (moveInput.y < -0.5f && isGrounded && !isDropping){
             Debug.Log("床抜けok");
             StartCoroutine(DropThroughPlatform());
+        }
+
+        // 梯子開始
+        if (isOnLadder && !isClimbing){
+            // 左キーで誤って入らないように「縦入力の意図が強い場合」に限定
+            float absX = Mathf.Abs(moveInput.x);
+            float absY = Mathf.Abs(moveInput.y);
+            bool verticalIntent = (moveInput.y > 0.3f) && (absY > absX + 0.05f);
+
+            // 入力アセットの誤配線ケア: 物理キーボードのUp/Wも許容
+            if (!verticalIntent){
+                var kb = Keyboard.current;
+                if (kb != null)
+                    verticalIntent = kb.upArrowKey.isPressed || kb.wKey.isPressed;
+            }
+
+            if (verticalIntent)
+                EnterLadder();
         }
     }
 
