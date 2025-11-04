@@ -298,32 +298,42 @@ public class PlayerController : MonoBehaviour{
     }
 
     private void HandleClimb(){
-        // 横入力監視
-        if (Mathf.Abs(moveInput.x) > 0.1f)
-            horizontalHoldTimeLadder++;
-        else
-            horizontalHoldTimeLadder = 0f;
-
-        // 横入力が30フレーム以上 or ジャンプで梯子解除
-        if (horizontalHoldTimeLadder >= horizontalReleaseFramesLadder || jumpPressed){
+        // 梯子から出た場合は即座に離脱
+        if (!isOnLadder){
             ExitLadder();
             return;
         }
 
-        // 上下移動のみ（Xは梯子の中心へ固定）
+        // --- 横入力監視を厳しめに ---
+        if (Mathf.Abs(moveInput.x) > 0.25f){
+            horizontalHoldTimeLadder++;
+        }else{
+            // ノイズ除去
+            horizontalHoldTimeLadder = 0f;
+        }
+
+        Debug.Log($"Check800 - horizontalHoldTimeLadder > {horizontalHoldTimeLadder} | {horizontalReleaseFramesLadder}");
+        // 横入力が30フレーム以上 or ジャンプで梯子解除
+        if (horizontalHoldTimeLadder >= horizontalReleaseFramesLadder || jumpPressed){
+            Debug.Log("Check801 - ExitLadder(梯子から出ました)");
+            ExitLadder();
+            return;
+        }
+
+        // X軸スナップ
         if (lockXOnLadder && currentLadderCollider != null){
-            // スナップした中心からズレないよう、毎フレーム位置を補正
             Vector3 pos = transform.position;
             pos.x = ladderSnapCenterX;
             transform.position = pos;
         }
 
-        velocity = new Vector2(0f, moveInput.y * climbSpeed);
+        float climbY = moveInput.y;
+        velocity = new Vector2(0f, climbY * climbSpeed);
         rb.linearVelocity = velocity;
         rb.gravityScale = 0f;
 
-        // アニメーション更新予定地
-        animator?.SetBool("isClimbing", Mathf.Abs(moveInput.y) > 0.1f);
+        animator?.SetBool("isClimbing", true);
+        animator?.SetFloat("ClimbSpeed", Mathf.Abs(climbY));
     }
 
     private void EnterLadder(){
@@ -353,11 +363,14 @@ public class PlayerController : MonoBehaviour{
     }
 
     private void ExitLadder(){
+        Debug.Log($"Check899 - ExitLadder(梯子から出ました)");
         isClimbing = false;
-        rb.gravityScale = 0f; // 元々0なので維持
+        //rb.gravityScale = 0f; // 元々0なので維持
         horizontalHoldTimeLadder = 0f;
         lockXOnLadder = false;
         animator?.SetBool("isClimbing", false);
+        animator?.SetFloat("ClimbSpeed", 0f);
+        velocity.y = -0.1f; // 少し下向きに慣性を与えて自然な落下
     }
 
     private void UpdateFacing(){
@@ -371,7 +384,15 @@ public class PlayerController : MonoBehaviour{
     }
 
     private void UpdateAnimation(){
-		animator?.SetBool("Walk", Mathf.Abs(moveInput.x) > 0.1f);
+        if (isClimbing){
+            // 梯子中はWalkアニメをオフにして固定
+            animator?.SetBool("Walk", false);
+            // 梯子にいる間は常にisClimbingをtrueに維持（静止時も登り状態を維持）
+            animator?.SetBool("isClimbing", true);
+            return;
+        }
+
+        animator?.SetBool("Walk", Mathf.Abs(moveInput.x) > 0.1f);
         // 攻撃中はJumpフラグを上書きしない（空中攻撃が吸い込まれるのを防止）
         // 梯子中はJumpアニメを無効化する（地上判定に依存しない）
         if (!isAttacking){
@@ -383,21 +404,25 @@ public class PlayerController : MonoBehaviour{
         }
     }
 
-    private void OnTriggerEnter2D(Collider2D collision){
-        if (collision.CompareTag("Ladder")){
+    private void OnTriggerEnter2D(Collider2D other){
+        if (other.CompareTag("Ladder")){
             isOnLadder = true;
-            currentLadderCollider = collision; // 侵入した梯子を保持
+            currentLadderCollider = other; // 侵入した梯子を保持
         }
     }
 
     private void OnTriggerExit2D(Collider2D collision){
         if (collision.CompareTag("Ladder")){
-            isOnLadder = false;
-            ExitLadder();
-            if (currentLadderCollider == collision)
-                currentLadderCollider = null;
+            isOnLadder = false; // 梯子から出たら false
+            currentLadderCollider = null;
+            Debug.Log("Ladder exited");
+            // 登り中なら梯子から離脱させる
+            if (isClimbing){
+                ExitLadder();
+            }
         }
     }
+
 
     // ===================== 攻撃処理 =====================
     public void OnAttack(InputAction.CallbackContext context){
@@ -564,23 +589,18 @@ public class PlayerController : MonoBehaviour{
             Debug.Log("床抜けok");
             StartCoroutine(DropThroughPlatform());
         }
-
-        // 梯子開始
-        if (isOnLadder && !isClimbing){
-            // 左キーで誤って入らないように「縦入力の意図が強い場合」に限定
-            float absX = Mathf.Abs(moveInput.x);
-            float absY = Mathf.Abs(moveInput.y);
-            bool verticalIntent = (moveInput.y > 0.3f) && (absY > absX + 0.05f);
-
-            // 入力アセットの誤配線ケア: 物理キーボードのUp/Wも許容
-            if (!verticalIntent){
-                var kb = Keyboard.current;
-                if (kb != null)
-                    verticalIntent = kb.upArrowKey.isPressed || kb.wKey.isPressed;
+        // 梯子判定
+        if (isOnLadder){
+            if (!isClimbing){
+                // 縦入力が明確なら登り開始
+                if (Mathf.Abs(moveInput.y) > 0.2f){
+                    EnterLadder();
+                }
+                // 横入力が明確なら梯子を抜ける
+                else if (Mathf.Abs(moveInput.x) > 0.3f){
+                    ExitLadder();
+                }
             }
-
-            if (verticalIntent)
-                EnterLadder();
         }
     }
 

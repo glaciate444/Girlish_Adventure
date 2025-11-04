@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f07ed2d77682cf48a74d35a915bf57c, type: 3}
   m_Name: EnemyTest2_Jump
   m_EditorClassIdentifier: Assembly-CSharp::Move_Jump
-  jumpInterval: 1.5
+  jumpInterval: 0
   jumpForce: 10
   forwardSpeed: 3
   groundCheckOffset: 0.1
   groundLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 256

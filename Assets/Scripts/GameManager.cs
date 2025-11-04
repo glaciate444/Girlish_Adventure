@@ -1,10 +1,10 @@
-/* =======================================
- * ƒtƒ@ƒCƒ‹–¼ : GameManager.cs
- * ŠT—v : ƒQ[ƒ€ƒƒCƒ“ƒXƒNƒŠƒvƒg
+ï»¿/* =======================================
+ * ãƒ•ã‚¡ã‚¤ãƒ«å : GameManager.cs
+ * æ¦‚è¦ : ã‚²ãƒ¼ãƒ ãƒ¡ã‚¤ãƒ³ã‚¹ã‚¯ãƒªãƒ—ãƒˆ
  * Create Date : 2025/10/01
  * Date : 2025/10/24
  * Version : 0.04
- * XV“à—e : Presistent‘Î‰
+ * æ›´æ–°å†…å®¹ : Presistentå¯¾å¿œ
  * ======================================= */
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -15,7 +15,7 @@ public class GameManager : MonoBehaviour {
     private UIManager uiManager;
     public int CurrentStage { get; private set; }
 
-    [SerializeField] private SoundManager soundManager; // Inspector‚ÅPersistentã‚ÌSoundManagerQÆ
+    [SerializeField] private SoundManager soundManager; // Inspectorã§Persistentä¸Šã®SoundManagerå‚ç…§
     public SoundManager Sound => soundManager;
     public UIManager UI => uiManager;
     private void Awake(){
@@ -36,7 +36,7 @@ public class GameManager : MonoBehaviour {
         uiManager = null;
     }
 
-    // ===== ƒV[ƒ“‘JˆÚ =====
+    // ===== ã‚·ãƒ¼ãƒ³é·ç§» =====
 
     public void LoadStage(int stageNumber){
         CurrentStage = stageNumber;
@@ -51,13 +51,13 @@ public class GameManager : MonoBehaviour {
         SceneManager.LoadSceneAsync("Title");
     }
 
-    // ===== ƒTƒEƒ“ƒh‘€ì =====
+    // ===== ã‚µã‚¦ãƒ³ãƒ‰æ“ä½œ =====
 
     public void PlayBGM(int bgmID){
         if (soundManager != null)
             soundManager.PlayBGM(bgmID);
         else
-            Debug.LogWarning("SoundManager ‚ª–¢İ’è‚Å‚·BPersistent ƒV[ƒ“‚É”z’u‚µ‚Ä‚­‚¾‚³‚¢B");
+            Debug.LogWarning("SoundManager ãŒæœªè¨­å®šã§ã™ã€‚Persistent ã‚·ãƒ¼ãƒ³ã«é…ç½®ã—ã¦ãã ã•ã„ã€‚");
     }
 
     public void StopBGM(){

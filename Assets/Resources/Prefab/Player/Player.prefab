@@ -232,7 +232,7 @@ Transform:
   m_GameObject: {fileID: 3721276075052714121}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.389, z: 0}
+  m_LocalPosition: {x: 0, y: -0.33, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -395,6 +395,7 @@ MonoBehaviour:
   groundCheck: {fileID: 6823880510347196788}
   dropThroughTime: 0.3
   climbSpeed: 4
+  ladderMaxSnapWidth: 1.5
   animator: {fileID: 6139730529166128147}
   spriteRenderer: {fileID: 3362155138497218852}
   hitEffectSpawner: {fileID: 1013685082542145824, guid: efda86670dc94e747a1371da620c0ec7, type: 3}
@@ -461,8 +462,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.011312008, y: -0.11132294}
-  m_Size: {x: 0.6085396, y: 1.0340601}
+  m_Offset: {x: 0.011312008, y: -0.10935187}
+  m_Size: {x: 0.6085396, y: 1.030118}
   m_Direction: 0
 --- !u!114 &894266913406812210
 MonoBehaviour:

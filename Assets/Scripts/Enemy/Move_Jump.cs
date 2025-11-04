@@ -23,49 +23,51 @@ public class Move_Jump : MoveBehaviorSO{
         Rigidbody2D rb = enemy.Rb;
         Vector2 dir = enemy.MoveDirection;
         Vector2 pos = enemy.transform.position;
-
-        bool isGrounded;
         Collider2D col = enemy.GetComponent<Collider2D>();
+
+        // ===== 地面チェック =====
+        bool isGrounded = false;
         if (col != null){
             int mask = (groundLayer.value == 0) ? Physics2D.AllLayers : groundLayer.value;
             isGrounded = col.IsTouchingLayers(mask);
 
-            // 足元（bounds.min）から短距離レイでも確認（保険）
+            // 足元レイチェック
             Vector2 footOrigin = new Vector2(col.bounds.center.x, col.bounds.min.y + 0.02f);
             int rayMask = (groundLayer.value == 0) ? Physics2D.DefaultRaycastLayers : groundLayer.value;
             var hit = Physics2D.Raycast(footOrigin, Vector2.down, 0.05f, rayMask);
-            Debug.DrawRay(footOrigin, Vector2.down * 0.05f, hit ? Color.green : Color.red);
             if (!isGrounded) isGrounded = hit.collider != null;
-        }else{
-            // コライダーが無い場合のフォールバック：Transform基準で下向きレイ
-            Vector2 origin = pos + Vector2.down * groundCheckOffset;
-            int rayMask = (groundLayer.value == 0) ? Physics2D.DefaultRaycastLayers : groundLayer.value;
-            isGrounded = Physics2D.Raycast(origin, Vector2.down, 0.2f, rayMask);
-            Debug.DrawRay(origin, Vector2.down * 0.2f, isGrounded ? Color.green : Color.red);
+            Debug.DrawRay(footOrigin, Vector2.down * 0.05f, hit ? Color.green : Color.red);
+        }
+
+        // ===== 壁チェック =====
+        float wallCheckDistance = 0.1f;
+        Vector2 rayOrigin = new Vector2(
+            col.bounds.center.x + dir.x * (col.bounds.extents.x - 0.05f), // 側面ギリギリ
+            col.bounds.center.y); // 垂直中央
+
+        int wallMask = (groundLayer.value == 0) ? Physics2D.DefaultRaycastLayers : groundLayer.value;
+        RaycastHit2D wallHit = Physics2D.Raycast(rayOrigin, dir, wallCheckDistance, wallMask);
+
+        Debug.DrawRay(rayOrigin, dir * wallCheckDistance, wallHit ? Color.yellow : Color.cyan);
+
+        // 壁に当たったときのみ反転（余計な反転防止）
+        if (wallHit.collider != null && Mathf.Abs(rb.linearVelocity.x) > 0.01f){
+            dir.x *= -1;
+            enemy.MoveDirection = dir;
         }
 
         state.timer += Time.deltaTime;
 
-        // ===== ジャンプ条件 =====
-        if (isGrounded && !wasGrounded){
-            // 着地した瞬間にタイマーリセット
+        if (isGrounded && !wasGrounded)
             state.timer = 0;
-        }
 
         if (isGrounded && state.timer >= jumpInterval){
-            // ジャンプ発動
-            Vector2 newVelocity = new Vector2(
-                dir.x * forwardSpeed,
-                jumpForce);
-
-            rb.linearVelocity = newVelocity;
+            rb.linearVelocity = new Vector2(dir.x * forwardSpeed, jumpForce);
             state.timer = 0;
         }else{
-            // 空中中も横方向を維持（AddForce不要）
-            rb.linearVelocity = new Vector2(
-                dir.x * forwardSpeed,
-                rb.linearVelocity.y);
+            rb.linearVelocity = new Vector2(dir.x * forwardSpeed, rb.linearVelocity.y);
         }
+
         wasGrounded = isGrounded;
     }
 }
