@@ -34,6 +34,11 @@ public abstract class BaseEnemy : MonoBehaviour {
         rb = GetComponent<Rigidbody2D>();
         currentHP = maxHP;
 
+        if (Player == null){
+            var playerController = FindFirstObjectByType<PlayerController>();
+            Player = playerController ? playerController.transform : null;
+        }
+
         if (moveBehavior != null){
             moveState = moveBehavior.CreateState();
             moveBehavior.Initialize(this, moveState);
