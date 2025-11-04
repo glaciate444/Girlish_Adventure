@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: BGMDatabase
   m_EditorClassIdentifier: Assembly-CSharp::BGMDatabase
   bgms:
-  - id: 0
-    label: 
-    clip: {fileID: 0}
-  - id: 0
-    label: 
-    clip: {fileID: 0}
+  - id: 1
+    label: TestBGM01
+    clip: {fileID: 8300000, guid: addf5c26860ba1148b2107a1a08afa3b, type: 3}
+  - id: 2
+    label: TestBGM02
+    clip: {fileID: 8300000, guid: 21dafb844f6948041875f19b6f0594b2, type: 3}
