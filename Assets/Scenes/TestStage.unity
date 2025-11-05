@@ -1887,7 +1887,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StageInitializer
   uiManagerPrefab: {fileID: 3344428280801254172, guid: a55967677285f294ba0be9cc0e30600b, type: 3}
-  bgmID: -1
+  bgmID: 2
 --- !u!4 &1676778918
 Transform:
   m_ObjectHideFlags: 0
@@ -2093,7 +2093,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 233fe9046ef25dc4bb0951884a9076c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GoalTrigger
-  fadePrefab: {fileID: 2046162174}
+  goalFanfareID: 99
+  resultSceneName: Result
 --- !u!114 &1821354089
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2119,17 +2120,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7e055e2aa78bfd24993db51e235445c3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
---- !u!1 &2046162174 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6810102119040039463, guid: 64d1e561e363e3c448e092a78cbb54ca, type: 3}
-  m_PrefabInstance: {fileID: 2248355338035750291}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &2046162176 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 945424401313553605, guid: 64d1e561e363e3c448e092a78cbb54ca, type: 3}
   m_PrefabInstance: {fileID: 2248355338035750291}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2046162174}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}

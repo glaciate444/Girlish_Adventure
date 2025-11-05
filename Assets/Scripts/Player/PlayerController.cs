@@ -109,12 +109,12 @@ public class PlayerController : MonoBehaviour{
     }
 
     private IEnumerator InitialSyncUIRoutine(){
-        // GameManager と UIManager の準備を待機
-        while (GameManager.Instance == null || GameManager.Instance.UI == null)
+        // UIManager の準備を待機
+        while (UIManager.Instance == null)
             yield return null;
 
-        GameManager.Instance.UI.UpdateHP(hp, maxHP);
-        GameManager.Instance.UI.UpdateSP(sp, maxSP);
+        UIManager.Instance.UpdateHP(hp, maxHP);
+        UIManager.Instance.UpdateSP(sp, maxSP);
     }
 
     private void OnEnable(){
@@ -554,24 +554,24 @@ public class PlayerController : MonoBehaviour{
     public void TakeDamage(int dmg){
         if (isInvincible) return;
         hp = Mathf.Clamp(hp - dmg, 0, maxHP);
-        GameManager.Instance?.UI?.UpdateHP(hp, maxHP);
+        UIManager.Instance?.UpdateHP(hp, maxHP);
         OnDamage?.Invoke();
         if (hp <= 0) Die();
     }
 
     public void HealHP(int amount){
         hp = Mathf.Clamp(hp + amount, 0, maxHP);
-        GameManager.Instance?.UI?.UpdateHP(hp, maxHP);
+        UIManager.Instance?.UpdateHP(hp, maxHP);
     }
 
     public void UseSpecial(int cost){
         sp = Mathf.Clamp(sp - cost, 0, maxSP);
-        GameManager.Instance?.UI?.UpdateSP(sp, maxSP);
+        UIManager.Instance?.UpdateSP(sp, maxSP);
     }
 
     public void HealSP(int amount){
         sp = Mathf.Clamp(sp + amount, 0, maxSP);
-        GameManager.Instance?.UI?.UpdateSP(sp, maxSP);
+        UIManager.Instance?.UpdateSP(sp, maxSP);
     }
 
     private void Die(){

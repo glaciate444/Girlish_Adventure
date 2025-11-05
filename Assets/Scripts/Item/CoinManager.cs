@@ -35,11 +35,18 @@ public class CoinManager : MonoBehaviour{
     }
 
     private void TryUpdateUI(){
-        var ui = GameManager.Instance?.UI;
-        if (ui != null)
-            ui.UpdateCoinUI(totalCoins);
-        else
-            Debug.LogWarning("UIManagerが存在しないためUI更新できません。");
+        // UIManager.Instanceを直接使用（GameManager経由ではなく）
+        if (UIManager.Instance != null){
+            UIManager.Instance.UpdateCoinUI(totalCoins);
+        }else{
+            // UIManager.Instanceが見つからない場合、GameManager経由も試す
+            var ui = GameManager.Instance?.UI;
+            if (ui != null){
+                ui.UpdateCoinUI(totalCoins);
+            }else{
+                Debug.LogWarning("UIManagerが存在しないためUI更新できません。");
+            }
+        }
     }
 
     public int GetTotalCoins() => totalCoins;

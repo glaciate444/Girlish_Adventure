@@ -655,7 +655,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StageInitializer
   uiManagerPrefab: {fileID: 3344428280801254172, guid: a55967677285f294ba0be9cc0e30600b, type: 3}
-  bgmID: -1
+  bgmID: 1
 --- !u!4 &549684766
 Transform:
   m_ObjectHideFlags: 0
@@ -992,6 +992,7 @@ MonoBehaviour:
   attackPower: 1
   moveBehavior: {fileID: 11400000, guid: f0adf090a479e9c4ab4b458ca13b6966, type: 2}
   shootBehavior: {fileID: 0}
+  isInvincible: 0
 --- !u!114 &638608956
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1398,6 +1399,7 @@ MonoBehaviour:
   attackPower: 1
   moveBehavior: {fileID: 0}
   shootBehavior: {fileID: 11400000, guid: 7a023b3b6dc308e4db9a9ead9dc18e13, type: 2}
+  isInvincible: 0
 --- !u!50 &880974931
 Rigidbody2D:
   serializedVersion: 5
@@ -1808,6 +1810,7 @@ MonoBehaviour:
   attackPower: 2
   moveBehavior: {fileID: 11400000, guid: 255d6dcf194b8f84d8ffab8bf430b07f, type: 2}
   shootBehavior: {fileID: 0}
+  isInvincible: 0
 --- !u!50 &1311655373
 Rigidbody2D:
   serializedVersion: 5
@@ -2640,6 +2643,7 @@ MonoBehaviour:
   attackPower: 2
   moveBehavior: {fileID: 11400000, guid: eaa3701287889f24785deca2c17ac2bb, type: 2}
   shootBehavior: {fileID: 0}
+  isInvincible: 0
 --- !u!50 &1957032216
 Rigidbody2D:
   serializedVersion: 5
@@ -5784,6 +5788,7 @@ MonoBehaviour:
   attackPower: 1
   moveBehavior: {fileID: 11400000, guid: dd48ed0b6b80c0840b83bcfd7b4367da, type: 2}
   shootBehavior: {fileID: 0}
+  isInvincible: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

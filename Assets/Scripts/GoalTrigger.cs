@@ -1,7 +1,19 @@
-﻿using UnityEngine;
+﻿/* =======================================
+ * ファイル名 : GoalTrigger.cs
+ * 概要 : ゴール処理スクリプト
+ * Create Date : 2025/10/24
+ * Date : 2025/11/05
+ * Version : 0.02
+ * 更新内容 : リニューアル
+ * ======================================= */
+using UnityEngine;
+using System.Collections;
 
 public class GoalTrigger : MonoBehaviour {
-    [SerializeField] private GameObject fadePrefab;
+    [Header("ゴールファンファーレ（BGM扱い）")]
+    [SerializeField] private int goalFanfareID = 99; // bgmDBに登録済みのID
+    [Header("リザルトシーン名")]
+    [SerializeField] private string resultSceneName = "Result";
 
     private bool isTriggered = false;
 
@@ -13,41 +25,15 @@ public class GoalTrigger : MonoBehaviour {
         StartCoroutine(GoalSequence());
     }
 
-    private System.Collections.IEnumerator GoalSequence(){
-        // フェードCanvas生成
-        var fadeObj = Instantiate(fadePrefab);
-        var fader = fadeObj.GetComponent<SceneFader>();
+    private IEnumerator GoalSequence(){
+        PauseManager.Instance.SetPause(true); // ← 一時停止
 
-        // BGMフェードアウト開始
-        StartCoroutine(FadeOutBGM(1.0f));
-
-        // 画面フェードアウト
-        yield return fader.FadeOut();
-
-        // クリアUI表示
         GameManager.Instance.StopBGM();
-        if (GameManager.Instance != null && GameManager.Instance.Sound != null)
-            GameManager.Instance.PlaySE(0); // クリアSEなど
+        GameManager.Instance.PlayBGM(goalFanfareID);
 
-        // シーン遷移（WorldMapへ）
-        GameManager.Instance.ReturnToWorldMap();
-    }
+        yield return new WaitForSeconds(3.5f);
 
-    private System.Collections.IEnumerator FadeOutBGM(float duration){
-        var sound = GameManager.Instance.Sound;
-        var bgmSource = sound != null ? sound.GetComponentInChildren<AudioSource>() : null;
-        if (bgmSource == null) yield break;
-
-        float startVol = bgmSource.volume;
-        float time = 0f;
-
-        while (time < duration){
-            bgmSource.volume = Mathf.Lerp(startVol, 0f, time / duration);
-            time += Time.deltaTime;
-            yield return null;
-        }
-        bgmSource.volume = 0f;
-        sound.StopBGM();
-        bgmSource.volume = startVol; // 戻す（次曲用）
+        // リザルト画面へ
+        GameManager.Instance.GoResult(resultSceneName);
     }
 }
