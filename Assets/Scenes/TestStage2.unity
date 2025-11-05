@@ -1079,8 +1079,8 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 1, g: 0.34579018, b: 0.28773582, a: 1}
+  m_Sprite: {fileID: 6354828254231014404, guid: fe75dde0a2435d340a1da4f5f06b7c69, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -2569,7 +2569,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 233fe9046ef25dc4bb0951884a9076c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GoalTrigger
-  fadePrefab: {fileID: 0}
+  goalFanfareID: 99
+  resultSceneName: Result
 --- !u!1 &1957032213
 GameObject:
   m_ObjectHideFlags: 0
