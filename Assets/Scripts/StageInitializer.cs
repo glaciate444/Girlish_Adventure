@@ -226,9 +226,9 @@ public class StageInitializer : MonoBehaviour{
                 ui.UpdateCoinUI(coinMgr.GetTotalCoins());
 
             // プレイヤーの HP/SP も初期同期
-            var player = FindObjectOfType<PlayerController>();
+            var player = FindObjectOfType<PlayerData>();
             if (player != null){
-                ui.UpdateHP(player.GetHP(), player.maxHP);
+                ui.UpdateHP(player.hp, player.maxHP);
                 ui.UpdateSP(player.sp, player.maxSP);
             }
         }

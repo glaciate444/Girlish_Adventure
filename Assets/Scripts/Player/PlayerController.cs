@@ -13,14 +13,7 @@ using UnityEngine.InputSystem;
 //[RequireComponent(typeof(Rigidbody2D), typeof(CapsuleCollider2D))]
 public class PlayerController : MonoBehaviour{
     [Header("基本ステータス")]
-    [SerializeField] private float moveSpeed = 7f;
-    [SerializeField] private float jumpForce = 13f;
-    [SerializeField] private float gravity = -50f; // カスタム重力（GravityScaleは0）
-    [Header("UIステータス")]
-    public int hp;
-    public int sp;
-    public int maxHP = 10;
-    public int maxSP = 6;
+    [SerializeField] private PlayerData playerData;
     [Header("物理演算ステータス")]
     [SerializeField] private float airControlFactor = 0.9f; // 空中でもほぼ地上と同等の最大速度
     [SerializeField] private float jumpCutMultiplier = 0.4f; // ジャンプカット倍率
@@ -100,9 +93,14 @@ public class PlayerController : MonoBehaviour{
     }
 
     private void Start(){
-        // HP/SP を起動時に最大値で初期化
-        if (hp <= 0) hp = maxHP;
-        if (sp <= 0) sp = maxSP;
+        // PlayerDataが設定されていない場合は警告
+        if (playerData == null){
+            Debug.LogError("PlayerDataが設定されていません。InspectorでPlayerDataを設定してください。");
+            return;
+        }
+
+        // PlayerDataで初期化（UI同期も含む）
+        playerData.InitializeStatus();
 
         // UI がまだ未登録のことがあるため、登録を待ってから同期
         StartCoroutine(InitialSyncUIRoutine());
@@ -113,8 +111,8 @@ public class PlayerController : MonoBehaviour{
         while (UIManager.Instance == null)
             yield return null;
 
-        UIManager.Instance.UpdateHP(hp, maxHP);
-        UIManager.Instance.UpdateSP(sp, maxSP);
+        // PlayerData内でUI更新
+        playerData.SyncUI();
     }
 
     private void OnEnable(){
@@ -179,8 +177,9 @@ public class PlayerController : MonoBehaviour{
 
     private void HandleMovement(){
         if (isAttacking) return;
+        if (playerData == null) return;
         float moveX = moveInput.x;
-        float targetSpeed = moveX * moveSpeed * (isGrounded ? 1f : airControlFactor);
+        float targetSpeed = moveX * playerData.moveSpeed * (isGrounded ? 1f : airControlFactor);
 
         // 強制横移動救済: 空中で入力があるのに横が0に張り付く場合
         if (forceAirStrafe && !isGrounded){
@@ -212,7 +211,7 @@ public class PlayerController : MonoBehaviour{
         }
 
         // 左右対称の最大速度でクランプ
-        float maxHoriz = isGrounded ? moveSpeed : moveSpeed * airControlFactor;
+        float maxHoriz = isGrounded ? playerData.moveSpeed : playerData.moveSpeed * airControlFactor;
         if (velocity.x > maxHoriz){
             velocity.x = maxHoriz;
         }else if (velocity.x < -maxHoriz){
@@ -231,8 +230,9 @@ public class PlayerController : MonoBehaviour{
     }
 
     private void HandleJump(){
+        if (playerData == null) return;
         if (jumpPressed && isGrounded && !isAttacking){
-            velocity.y = jumpForce;
+            velocity.y = playerData.jumpForce;
             jumpPressed = false;
             jumpCutApplied = false;
             animator?.SetTrigger("Jump");
@@ -252,9 +252,10 @@ public class PlayerController : MonoBehaviour{
     }
 
     private void ApplyGravity(){
+        if (playerData == null) return;
         if (!isGrounded){
             // カスタム重力適用
-            velocity.y += gravity * Time.fixedDeltaTime;
+            velocity.y += playerData.gravity * Time.fixedDeltaTime;
             // 最大落下速度制限
             if (velocity.y < maxFallSpeed)
                 velocity.y = maxFallSpeed;
@@ -498,8 +499,9 @@ public class PlayerController : MonoBehaviour{
 	}
 
     public void OnSpecialA(InputAction.CallbackContext context){
-        if (!context.performed || sp < specialCost) return;
-        UseSpecial(specialCost);
+        if (playerData == null) return;
+        if (!context.performed || playerData.sp < specialCost) return;
+        playerData.UseSpecial(specialCost);
         float forward = facingRight ? bulletSpawnForwardOffset : -bulletSpawnForwardOffset;
         float up = isGrounded ? bulletSpawnUpOffsetGrounded : 0f;
         Vector3 spawnPos = firePoint.position + new Vector3(forward, up, 0f);
@@ -527,7 +529,8 @@ public class PlayerController : MonoBehaviour{
 
         if (playerY > enemyY + 0.4f){
             Destroy(enemy);
-            velocity.y = jumpForce * 0.5f;
+            if (playerData != null)
+                velocity.y = playerData.jumpForce * 0.5f;
         }else{
             TakeDamage(1);
             StartCoroutine(DamageFlash());
@@ -552,26 +555,25 @@ public class PlayerController : MonoBehaviour{
 
     // ===================== ステータス制御 =====================
     public void TakeDamage(int dmg){
-        if (isInvincible) return;
-        hp = Mathf.Clamp(hp - dmg, 0, maxHP);
-        UIManager.Instance?.UpdateHP(hp, maxHP);
+        if (isInvincible || playerData == null) return;
+        playerData.TakeDamage(dmg);
         OnDamage?.Invoke();
-        if (hp <= 0) Die();
+        if (playerData.hp <= 0) Die();
     }
 
     public void HealHP(int amount){
-        hp = Mathf.Clamp(hp + amount, 0, maxHP);
-        UIManager.Instance?.UpdateHP(hp, maxHP);
+        if (playerData == null) return;
+        playerData.HealHP(amount);
     }
 
     public void UseSpecial(int cost){
-        sp = Mathf.Clamp(sp - cost, 0, maxSP);
-        UIManager.Instance?.UpdateSP(sp, maxSP);
+        if (playerData == null) return;
+        playerData.UseSpecial(cost);
     }
 
     public void HealSP(int amount){
-        sp = Mathf.Clamp(sp + amount, 0, maxSP);
-        UIManager.Instance?.UpdateSP(sp, maxSP);
+        if (playerData == null) return;
+        playerData.HealSP(amount);
     }
 
     private void Die(){
@@ -647,8 +649,8 @@ public class PlayerController : MonoBehaviour{
         isDropping = false;
     }
 
-    public int GetHP() { return hp; }
-    public int GetSP() { return sp; }
+    public int GetHP() { return playerData != null ? playerData.hp : 0; }
+    public int GetSP() { return playerData != null ? playerData.sp : 0; }
 
     // === JumpPad から呼ばれる ===
     public void ActivateJumpPad(float bounceHeight, float duration){
