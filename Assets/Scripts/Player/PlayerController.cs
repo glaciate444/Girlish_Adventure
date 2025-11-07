@@ -39,6 +39,8 @@ public class PlayerController : MonoBehaviour{
     [Header("Ground Check")]
     [SerializeField] private GroundCheck groundCheck;
     [SerializeField] private float dropThroughTime = 0.3f;
+    [SerializeField] private float coyoteTime = 0.1f;
+    private float lastGroundedTime;
     [Header("梯子乗降速度")]
     [SerializeField] private float climbSpeed = 4f;
     [SerializeField] private float ladderMaxSnapWidth = 1.5f; // これより幅広い梯子コライダーではXスナップしない

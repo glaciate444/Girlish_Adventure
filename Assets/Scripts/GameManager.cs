@@ -2,9 +2,9 @@
  * ファイル名 : GameManager.cs
  * 概要 : ゲームメインスクリプト
  * Create Date : 2025/10/01
- * Date : 2025/10/24
- * Version : 0.04
- * 更新内容 : Presistent対応
+ * Date : 2025/11/07
+ * Version : 0.05
+ * 更新内容 : セーブデータ対応
  * ======================================= */
 using System.Collections;
 using UnityEngine;
@@ -17,7 +17,8 @@ public class GameManager : MonoBehaviour {
     public int CurrentStage { get; private set; }
     private bool isEnsuringSoundManager = false; // 重複実行を防ぐフラグ
     private bool isEnsuringUIManager = false; // UIManager読み込み中のフラグ
-
+    public PlayerData playerData; // ScriptableObject で現在の状態を持つ
+    public int currentSlot = 1;
     public SoundManager SoundManager => SoundManager.Instance;
     public UIManager UI => uiManager;
 
@@ -320,4 +321,39 @@ public class GameManager : MonoBehaviour {
         }
     }
 
+    // ====== セーブデータ ============
+
+    public void SaveGame(){
+        var slot = new SaveSlot{
+            slotNumber = currentSlot,
+            stageProgress = 0, // まだ進行度がない場合
+            player = new PlayerSaveData{
+                // levelがないので削除
+                hp = playerData.hp,
+                sp = playerData.sp,
+                coin = playerData.coin,
+                // inventoryがない場合、nullでもOK
+                inventory = new string[0]
+            },
+            settings = new GameSettings()
+        };
+
+        SaveData.Save(currentSlot, slot);
+    }
+
+    public void LoadGame(){
+        if (!SaveData.Exists(currentSlot)){
+            Debug.LogWarning("No save data found.");
+            return;
+        }
+
+        var slot = SaveData.Load(currentSlot);
+
+        playerData.hp = slot.player.hp;
+        playerData.sp = slot.player.sp;
+        playerData.coin = slot.player.coin;
+
+        // inventoryがまだないならスキップ
+        playerData.SyncUI();
+    }
 }

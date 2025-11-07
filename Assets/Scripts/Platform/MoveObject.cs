@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 
-public class MoveObject : MonoBehaviour{
+[RequireComponent(typeof(Rigidbody2D))]
+public class MoveObject : MonoBehaviour {
     [Header("移動経路")] public GameObject[] movePoint;
     [Header("速さ")] public float speed = 1.0f;
 
@@ -12,13 +13,16 @@ public class MoveObject : MonoBehaviour{
 
     private void Start(){
         rb = GetComponent<Rigidbody2D>();
-        if (movePoint != null && movePoint.Length > 0 && rb != null){
+        rb.isKinematic = true; // 物理力を受けない
+        rb.interpolation = RigidbodyInterpolation2D.Interpolate;
+
+        if (movePoint != null && movePoint.Length > 0)
             rb.position = movePoint[0].transform.position;
-        }
+
+        oldPos = rb.position;
     }
-    public Vector2 GetVelocity(){
-        return myVelocity;
-    }
+
+    public Vector2 GetVelocity() => myVelocity;
 
     private void FixedUpdate(){
         if (movePoint == null || movePoint.Length <= 1) return;
@@ -27,10 +31,11 @@ public class MoveObject : MonoBehaviour{
             ? movePoint[nowPoint - 1].transform.position
             : movePoint[nowPoint + 1].transform.position;
 
-        transform.position = Vector2.MoveTowards(transform.position, targetPos, speed * Time.deltaTime);
+        Vector2 newPos = Vector2.MoveTowards(rb.position, targetPos, speed * Time.fixedDeltaTime);
+        rb.MovePosition(newPos);
 
         // 到達判定
-        if (Vector2.Distance(transform.position, targetPos) <= 0.05f){
+        if (Vector2.Distance(newPos, targetPos) <= 0.05f){
             if (!returnPoint){
                 nowPoint++;
                 if (nowPoint + 1 >= movePoint.Length)
@@ -42,22 +47,19 @@ public class MoveObject : MonoBehaviour{
             }
         }
 
-        // 速度計算（オプション）
-        Vector2 newPos = transform.position;
-        myVelocity = (newPos - oldPos) / Time.deltaTime;
+        // 速度計算
+        myVelocity = (newPos - oldPos) / Time.fixedDeltaTime;
         oldPos = newPos;
     }
-    private void OnCollisionEnter2D(Collision2D collision){
-        if (collision.gameObject.CompareTag("Player")){
-            collision.transform.SetParent(transform);
-            Debug.Log($"Check 201 - [MoveObject] Player entered lift: {name}");
-        }
-    }
 
-    private void OnCollisionExit2D(Collision2D collision){
+    // 接触時に velocity を渡す方法（親子化しない）
+    private void OnCollisionStay2D(Collision2D collision){
         if (collision.gameObject.CompareTag("Player")){
-            collision.transform.SetParent(null);
-            Debug.Log($"Check 202 - [MoveObject] Player exited lift: {name}");
+            var rbPlayer = collision.gameObject.GetComponent<Rigidbody2D>();
+            if (rbPlayer != null){
+                // リフトの移動分をプレイヤーに足す
+                rbPlayer.linearVelocity += myVelocity * Time.fixedDeltaTime;
+            }
         }
     }
 }

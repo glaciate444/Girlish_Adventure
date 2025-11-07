@@ -18,8 +18,8 @@ public class FallRespawnLift : BaseFallLift{
 
         yield return new WaitForSeconds(respawnDelay);
 
-        transform.position = initialPosition;
-        transform.rotation = initialRotation;
+        //transform.position = initialPosition;
+        //transform.rotation = initialRotation;
 
         rb.bodyType = RigidbodyType2D.Dynamic;
         isFalling = false;
