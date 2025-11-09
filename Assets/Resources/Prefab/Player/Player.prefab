@@ -232,7 +232,7 @@ Transform:
   m_GameObject: {fileID: 3721276075052714121}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.33, z: 0}
+  m_LocalPosition: {x: 0, y: -0.331, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -253,6 +253,9 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 20736
+  extraGroundLayers:
+    serializedVersion: 2
+    m_Bits: 0
   checkPoint: {fileID: 3767933829558806700}
   checkRadius: 0.3
   liftPushIgnoreThreshold: 0.5
@@ -366,13 +369,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   playerData: {fileID: 11400000, guid: ca514cdd9e709b3429743e6d640e0d2b, type: 2}
-  moveSpeed: 7
-  jumpForce: 16
-  gravity: -50
-  hp: 10
-  sp: 6
-  maxHP: 10
-  maxSP: 6
   airControlFactor: 0.9
   jumpCutMultiplier: 0.4
   maxFallSpeed: -25
@@ -384,6 +380,7 @@ MonoBehaviour:
   airDeceleration: 80
   forceAirStrafe: 1
   minAirStrafeSpeed: 1.5
+  maxSlopeAngle: 55
   swordHandler: {fileID: 8497053089012765622}
   weaponBase: {fileID: 1509482664476697413}
   playerBulletPrefab: {fileID: 2649944767155283731, guid: f5751807d56bfb248b9a198e4b0ba40e, type: 3}
@@ -395,13 +392,17 @@ MonoBehaviour:
   attackAirDuration: 0.6
   groundCheck: {fileID: 6823880510347196788}
   dropThroughTime: 0.3
+  coyoteTime: 0.1
   climbSpeed: 4
   ladderMaxSnapWidth: 1.5
+  ladderReleaseFrames: 30
   animator: {fileID: 6139730529166128147}
   spriteRenderer: {fileID: 3362155138497218852}
   hitEffectSpawner: {fileID: 1013685082542145824, guid: efda86670dc94e747a1371da620c0ec7, type: 3}
   damageTime: 3
   flashTime: 0.2
+  usePlatformCollisionFilter: 1
+  platformTopTolerance: 0.02
 --- !u!50 &4553512148041190260
 Rigidbody2D:
   serializedVersion: 5
@@ -463,8 +464,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.011312008, y: -0.10935187}
-  m_Size: {x: 0.6085396, y: 1.030118}
+  m_Offset: {x: 0.039571047, y: -0.08417666}
+  m_Size: {x: 0.5520215, y: 1.0861206}
   m_Direction: 0
 --- !u!114 &894266913406812210
 MonoBehaviour:

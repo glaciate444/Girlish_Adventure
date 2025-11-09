@@ -18,6 +18,8 @@ using UnityEngine;
 public class GroundCheck : MonoBehaviour{
     [Header("地面判定レイヤー")]
     public LayerMask groundLayer;
+    [Header("追加の地面レイヤー（可動リフトなど）")]
+    public LayerMask extraGroundLayers;
     [Header("接地判定用トランスフォーム")]
     public Transform checkPoint;
     [Header("判定半径")]
@@ -30,9 +32,14 @@ public class GroundCheck : MonoBehaviour{
     private bool prevGrounded;
     private Collider2D currentGroundCollider;
     private Vector2 smoothedNormal = Vector2.up;
+    // リフト等の床速度推定用（Rigidbody/MoveObject が無い場合のフォールバック）
+    private Transform lastGroundTransform;
+    private Vector3 lastGroundPosition;
+    private Vector2 estimatedGroundVelocity;
+    private float lastEstimateTime;
 
     [SerializeField] private float liftPushIgnoreThreshold = 0.5f; // 上昇速度閾値
-    private void Update(){
+    private void FixedUpdate(){
         if (checkPoint == null){
             IsGrounded = false;
             currentGroundCollider = null;
@@ -40,19 +47,16 @@ public class GroundCheck : MonoBehaviour{
             return;
         }
 
-        Collider2D hit = Physics2D.OverlapCircle(checkPoint.position, checkRadius, groundLayer);
+        // 地面 + 追加の地面（可動リフトなど）を判定。Platform レイヤーは除外。
+        int combinedMask = groundLayer | extraGroundLayers;
+        Collider2D hit = Physics2D.OverlapCircle(checkPoint.position, checkRadius, combinedMask);
         IsGrounded = hit != null;
-
-        if (hit == null){
-            Collider2D effectorHit = Physics2D.OverlapCircle(checkPoint.position, checkRadius, LayerMask.GetMask("Platform"));
-            if (effectorHit != null){
-                hit = effectorHit;
-            }
-        }
 
         if (hit != null){
             currentGroundCollider = hit;
-            Vector2 averageNormal = GetStableGroundNormal();
+            // 法線は地面＋追加地面を対象に算出
+            int mask = combinedMask;
+            Vector2 averageNormal = GetStableGroundNormal(mask);
             
             // 法線の急激な変化を防ぐ（より厳格に制限）
             float angleDiff = Vector2.Angle(smoothedNormal, averageNormal);
@@ -64,10 +68,26 @@ public class GroundCheck : MonoBehaviour{
             // さらに滑らかな法線変化
             smoothedNormal = Vector2.Lerp(smoothedNormal, averageNormal, 0.1f).normalized;
             GroundNormal = smoothedNormal;
+            
+            // === 床速度の推定（フォールバック） ===
+            Transform groundTransform = hit.attachedRigidbody != null ? hit.attachedRigidbody.transform : hit.transform;
+            float dt = Time.fixedDeltaTime;
+            if (groundTransform == lastGroundTransform && dt > 0f){
+                Vector3 delta = groundTransform.position - lastGroundPosition;
+                estimatedGroundVelocity = new Vector2(delta.x, delta.y) / dt;
+            }else{
+                estimatedGroundVelocity = Vector2.zero;
+            }
+            lastGroundTransform = groundTransform;
+            lastGroundPosition = groundTransform.position;
+            lastEstimateTime = Time.fixedTime;
         }else{
             currentGroundCollider = null;
             smoothedNormal = Vector2.up;
             GroundNormal = Vector2.up;
+            lastGroundTransform = null;
+            estimatedGroundVelocity = Vector2.zero;
+            lastEstimateTime = 0f;
         }
 
         if (IsGrounded != prevGrounded){
@@ -77,7 +97,7 @@ public class GroundCheck : MonoBehaviour{
     }
 
     // 複数レイで安定した法線を取得
-    private Vector2 GetStableGroundNormal(){
+    private Vector2 GetStableGroundNormal(int layerMask){
         if (checkPoint == null) return Vector2.up;
 
         Vector2 centerPos = (Vector2)checkPoint.position;
@@ -93,7 +113,7 @@ public class GroundCheck : MonoBehaviour{
         };
 
         foreach (Vector2 pos in rayPositions){
-            RaycastHit2D rayHit = Physics2D.Raycast(pos, Vector2.down, 0.4f, groundLayer);
+            RaycastHit2D rayHit = Physics2D.Raycast(pos, Vector2.down, 0.4f, layerMask);
             if (rayHit.collider != null){
                 totalNormal += rayHit.normal;
                 validHits++;
@@ -148,17 +168,19 @@ public class GroundCheck : MonoBehaviour{
                 catch
                 {
                     // どちらも使えなければゼロを返す
-                    return Vector2.zero;
+                    // 何もしない（次のフォールバックへ）
                 }
             }
         }
 
-        return Vector2.zero;
+        // 最後に、Transform の位置差分から推定した床速度を返す
+        return estimatedGroundVelocity;
     }
     public MoveObject GetCurrentGroundMoveObject(){
         if (currentGroundCollider == null) return null;
         return currentGroundCollider.GetComponentInParent<MoveObject>();
     }
+    public Collider2D CurrentGroundCollider => currentGroundCollider;
     public bool IsGroundedSafe(){
         if (!IsGrounded) return false;
 
